@@ -1,9 +1,5 @@
 import { FormMessage, Message } from "@/components/form-message";
 
-import { SmtpMessage } from "../smtp-message";
-import SignupForm from "@/components/auth/Sign Up/SignupForm";
-import { Button } from "@/components/ui/button";
-import { signInWithGoogleAction } from "@/actions/auth/actions";
 import Signup from "@/components/auth/Sign Up/SignUp";
 
 interface Props {
@@ -21,7 +17,6 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  // no “message” → show the interactive form
   return (
     <>
       <Signup />

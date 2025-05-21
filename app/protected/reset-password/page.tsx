@@ -1,6 +1,6 @@
 import { resetPasswordAction } from "@/actions/auth/actions";
 import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/auth/Shared/submit-button";
+import { SubmitButton } from "@/components/auth/Shared/Submit-Btn";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 

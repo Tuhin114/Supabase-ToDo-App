@@ -42,16 +42,19 @@ export const signInWithGithubAction = async () => {
 };
 
 export const signUpAction = async (formData: FormData) => {
+  const name = formData.get("name")?.toString();
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
 
-  if (!email || !password) {
+  console.log("Sign up action", { name, email, password });
+
+  if (!email || !password || !name) {
     return encodedRedirect(
       "error",
       "/sign-up",
-      "Email and password are required"
+      "Email, password, and name are required"
     );
   }
 
@@ -60,6 +63,9 @@ export const signUpAction = async (formData: FormData) => {
     password,
     options: {
       emailRedirectTo: `${origin}/auth/callback`,
+      data: {
+        name,
+      },
     },
   });
 
