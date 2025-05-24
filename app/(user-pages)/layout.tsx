@@ -1,4 +1,3 @@
-import SignIn from "@/components/auth/Sign In/SignIn";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -16,5 +15,5 @@ export default async function Layout({
   if (!user) {
     return redirect("/sign-in");
   }
-  return <div className="flex w-full max-w-sm flex-col gap-6">{children}</div>;
+  return <div className="flex w-full flex-col gap-6">{children}</div>;
 }

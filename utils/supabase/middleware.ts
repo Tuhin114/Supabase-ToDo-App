@@ -49,7 +49,7 @@ export const updateSession = async (request: NextRequest) => {
 
     if (request.nextUrl.pathname === "/" && !user.error) {
       return NextResponse.redirect(
-        new URL(`/user/${user.data.user?.id}`, request.url)
+        new URL(`/user/${user.data.user?.id}/today`, request.url)
       );
     }
 
