@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronRight,
-  MoreHorizontal,
-  Trash2,
-  Edit,
-  MoreVertical,
-} from "lucide-react";
+import { ChevronRight, Trash2, Edit, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +22,7 @@ import { PriorityBadge } from "../layout/task-badges/PriorityBadge";
 import { CategoryBadge } from "../layout/task-badges/CategoryBadge";
 import { TimeBadge } from "../layout/task-badges/TimeBadge";
 import React from "react";
+import { TaskBar } from "./TaskBar";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -37,8 +32,8 @@ interface TaskTableProps {
 export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <div className="w-24 h-24 mx-auto mb-6 bg-gray-800 rounded-full flex items-center justify-center">
+      <div className="text-center py-16">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center">
           <span className="text-3xl">📝</span>
         </div>
         <h3 className="text-xl font-semibold mb-2">No tasks found</h3>
@@ -52,7 +47,7 @@ export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-muted">
           <TableRow className="">
-            <TableHead className="w-12 "></TableHead>
+            <TableHead className="w-12"></TableHead>
             <TableHead className="">Task</TableHead>
             <TableHead className="">Status</TableHead>
             <TableHead className="">Priority</TableHead>
@@ -104,7 +99,7 @@ export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
                   <span>2</span>
                 </TableCell>
 
-                <TableCell className="text-right pr-2">
+                {/* <TableCell className="text-right pr-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -129,17 +124,16 @@ export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </TableCell>
+                </TableCell> */}
 
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {}}
-                    className="p-1 h-8 w-8 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-                  >
-                    <ChevronRight />
-                  </Button>
+                  <TaskBar
+                    task={task}
+                    categories={[]}
+                    onClose={() => {}}
+                    onTaskUpdate={() => {}}
+                    onAddCategory={() => {}}
+                  />
                 </TableCell>
               </TableRow>
             </React.Fragment>

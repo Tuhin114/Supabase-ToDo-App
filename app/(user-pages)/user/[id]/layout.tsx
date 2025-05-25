@@ -23,7 +23,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
-      <SidebarProvider>
+      <SidebarProvider className="flex">
         <AppSidebar />
 
         <SidebarInset>

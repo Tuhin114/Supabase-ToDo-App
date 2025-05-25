@@ -14,12 +14,19 @@ export interface Task {
   dueDate: Date;
   timeAllocated: string;
   tags: string[];
-  category: "personal" | "work";
-  subtasks: Array<{
-    id: string;
-    title: string;
-    completed: boolean;
-  }>;
+  category: Category;
+  subtasks: Subtask[];
   description?: string;
   completed?: boolean;
+}
+
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
 }

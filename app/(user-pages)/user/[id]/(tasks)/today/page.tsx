@@ -21,7 +21,7 @@ const initialTasks: Task[] = [
     dueDate: new Date("2024-01-25"),
     timeAllocated: "2 days",
     tags: ["content", "research", "marketing"],
-    category: "work",
+    category: { id: "1", name: "Work" },
     subtasks: [
       { id: "1a", title: "Analyze competitor content", completed: true },
       { id: "1b", title: "Create content calendar", completed: false },
@@ -36,7 +36,7 @@ const initialTasks: Task[] = [
     dueDate: new Date("2024-01-30"),
     timeAllocated: "3 days",
     tags: ["database", "outreach"],
-    category: "work",
+    category: { id: "1", name: "Work" },
     subtasks: [],
   },
   {
@@ -48,7 +48,7 @@ const initialTasks: Task[] = [
     dueDate: new Date("2024-01-22"),
     timeAllocated: "2 hrs",
     tags: ["documents", "urgent"],
-    category: "personal",
+    category: { id: "2", name: "Personal" },
     subtasks: [
       { id: "3a", title: "Gather required documents", completed: true },
       { id: "3b", title: "Book appointment", completed: false },
@@ -63,7 +63,7 @@ const initialTasks: Task[] = [
     dueDate: new Date("2024-01-20"),
     timeAllocated: "1 hr",
     tags: ["finance", "tax"],
-    category: "personal",
+    category: { id: "2", name: "Personal" },
     subtasks: [],
   },
   {
@@ -75,7 +75,7 @@ const initialTasks: Task[] = [
     dueDate: new Date("2024-01-25"),
     timeAllocated: "30 mins",
     tags: ["design", "printing"],
-    category: "work",
+    category: { id: "1", name: "Work" },
     subtasks: [],
   },
 ];
@@ -101,7 +101,7 @@ export default function TodayPage() {
   };
 
   return (
-    <Card className="bg-background border-none px-4">
+    <Card className="bg-background border-none px-4 shadow-none">
       <CardHeader className="flex">
         <div className="flex items-center justify-between gap-2">
           <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
