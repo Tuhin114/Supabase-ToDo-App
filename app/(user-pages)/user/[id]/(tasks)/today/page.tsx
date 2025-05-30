@@ -3,82 +3,14 @@
 import { DateRangePicker } from "@/components/layout/page/DateRangePicker";
 import { PriorityFilter } from "@/components/layout/page/PriorityFilter";
 import { StatusFilter } from "@/components/layout/page/StatusFilter";
-import { TaskItem } from "@/components/task/TaskItem";
+import TaskSheet from "@/components/task/TaskSheet";
 import { TaskTable } from "@/components/task/TaskTable";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Task } from "@/types/Task";
-
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { sampleTasks } from "@/constants/data";
+import { Category, Subtask, Task, TaskColor, TaskTime } from "@/types/Task";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
-const initialTasks: Task[] = [
-  {
-    id: "1",
-    title: "Research content ideas",
-    status: "inprogress" as const,
-    priority: "high",
-    startDate: new Date("2024-01-20"),
-    dueDate: new Date("2024-01-25"),
-    timeAllocated: "2 days",
-    tags: ["content", "research", "marketing"],
-    category: { id: "1", name: "Work" },
-    subtasks: [
-      { id: "1a", title: "Analyze competitor content", completed: true },
-      { id: "1b", title: "Create content calendar", completed: false },
-    ],
-  },
-  {
-    id: "2",
-    title: "Create a database of guest authors",
-    status: "todo",
-    priority: "moderate",
-    startDate: new Date("2024-01-22"),
-    dueDate: new Date("2024-01-30"),
-    timeAllocated: "3 days",
-    tags: ["database", "outreach"],
-    category: { id: "1", name: "Work" },
-    subtasks: [],
-  },
-  {
-    id: "3",
-    title: "Renew driver's license",
-    status: "waiting",
-    priority: "high",
-    startDate: new Date("2024-01-18"),
-    dueDate: new Date("2024-01-22"),
-    timeAllocated: "2 hrs",
-    tags: ["documents", "urgent"],
-    category: { id: "2", name: "Personal" },
-    subtasks: [
-      { id: "3a", title: "Gather required documents", completed: true },
-      { id: "3b", title: "Book appointment", completed: false },
-    ],
-  },
-  {
-    id: "4",
-    title: "Consult accountant",
-    status: "done",
-    priority: "moderate",
-    startDate: new Date("2024-01-15"),
-    dueDate: new Date("2024-01-20"),
-    timeAllocated: "1 hr",
-    tags: ["finance", "tax"],
-    category: { id: "2", name: "Personal" },
-    subtasks: [],
-  },
-  {
-    id: "5",
-    title: "Print business card",
-    status: "stuck",
-    priority: "low",
-    startDate: new Date("2024-01-10"),
-    dueDate: new Date("2024-01-25"),
-    timeAllocated: "30 mins",
-    tags: ["design", "printing"],
-    category: { id: "1", name: "Work" },
-    subtasks: [],
-  },
-];
 
 export default function TodayPage() {
   const [dateRange, setDateRange] = useState<{
@@ -90,41 +22,192 @@ export default function TodayPage() {
   });
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   const handleToggleComplete = (taskId: string) => {
+    console.log("[Toggle Complete] Task ID:", taskId);
     setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId ? { ...t, completed: !t.completed, status: "done" } : t
-      )
+      prev.map((t) => {
+        if (t.id === taskId) {
+          console.log("[Toggling Task] Before:", t);
+          const updated = { ...t, completed: !t.completed };
+          console.log("[Toggling Task] After:", updated);
+          return updated;
+        }
+        return t;
+      })
     );
   };
 
-  return (
-    <Card className="bg-background border-none px-4 shadow-none">
-      <CardHeader className="flex">
-        <div className="flex items-center justify-between gap-2">
-          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+  const handleSaveTask = async (
+    formData: FormData
+  ): Promise<{ error?: string }> => {
+    try {
+      const payload: any = {};
+      formData.forEach((value, key) => {
+        if (
+          (key === "tags" || key === "subtasks") &&
+          typeof value === "string"
+        ) {
+          payload[key] = JSON.parse(value);
+        } else if (key === "allDay") {
+          payload[key] = value === "true";
+        } else {
+          payload[key] = value;
+        }
+      });
 
-          <div className="flex items-center gap-2">
-            <PriorityFilter
-              filterPriority={filterPriority}
-              setFilterPriority={setFilterPriority}
+      // Handle time data - convert ISO strings back to Date objects
+      const timeStart = formData.get("timeStart") as string;
+      const timeEnd = formData.get("timeEnd") as string;
+
+      payload.time = {
+        timeEstimate: formData.get("timeEstimate") as string,
+        start: timeStart ? new Date(timeStart) : new Date(),
+        end: timeEnd ? new Date(timeEnd) : new Date(Date.now() + 3600_000),
+        allDay: formData.get("allDay") === "true",
+      };
+
+      // Remove time-related fields from top-level payload
+      delete payload.timeStart;
+      delete payload.timeEnd;
+      delete payload.timeEstimate;
+      delete payload.allDay;
+
+      console.log("[handleSaveTask] Payload from form:", payload);
+
+      const isUpdate = formData.has("taskId");
+
+      const timeValue = payload.time as TaskTime;
+      if (!timeValue) {
+        console.warn("[handleSaveTask] Missing time field in payload.");
+      }
+
+      if (isUpdate) {
+        const id = payload.taskId as string;
+        console.log("[Updating Task] ID:", id);
+
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === id
+              ? {
+                  ...t,
+                  title: payload.title,
+                  description: payload.description,
+                  status: payload.status as Task["status"],
+                  priority: payload.priority as Task["priority"],
+                  time: timeValue || t.time,
+                  category: payload.category as Category,
+                  tags: payload.tags as string[],
+                  subtasks: payload.subtasks as Subtask[],
+                  color: payload.color as TaskColor,
+                }
+              : t
+          )
+        );
+      } else {
+        const newTask: Task = {
+          id: crypto.randomUUID(),
+          title: payload.title,
+          description: payload.description,
+          status: payload.status as Task["status"],
+          priority: payload.priority as Task["priority"],
+          time: timeValue || {
+            start: new Date(),
+            end: new Date(Date.now() + 3600_000),
+            timeEstimate: "1 hr",
+            allDay: false,
+          },
+          category: payload.category as Category,
+          tags: payload.tags as string[],
+          subtasks: payload.subtasks as Subtask[],
+          color: payload.color as TaskColor,
+          completed: false,
+          createdAt: new Date(payload.createdAt),
+          updatedAt: new Date(payload.updatedAt),
+        };
+
+        console.log("[Creating New Task]", newTask);
+        setTasks((prev) => [newTask, ...prev]);
+      }
+
+      // Close the appropriate sheet
+      setNewTaskOpen(false);
+
+      return { error: "Task saved successfully!" };
+    } catch (err: any) {
+      console.error("[Error in handleSaveTask]:", err);
+      return { error: "Failed to save task. Please try again." };
+    }
+  };
+
+  const handleDeleteTask = async (
+    taskId: string
+  ): Promise<{ error?: string }> => {
+    try {
+      console.log("[Deleting Task] ID:", taskId);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      setNewTaskOpen(false);
+      return {};
+    } catch (err) {
+      console.error("[Error in handleDeleteTask]:", err);
+      return { error: "Failed to delete task. Please try again." };
+    }
+  };
+
+  return (
+    <>
+      <Card className="bg-background border-none px-4 shadow-none">
+        <CardHeader className="flex">
+          <div className="flex items-center justify-between gap-2">
+            <DateRangePicker
+              dateRange={dateRange}
+              setDateRange={setDateRange}
             />
-            <StatusFilter
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-            />
-            <Button variant="secondary">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              New Task
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <PriorityFilter
+                filterPriority={filterPriority}
+                setFilterPriority={setFilterPriority}
+              />
+              <StatusFilter
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
+              />
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setNewTaskOpen(true);
+                }}
+              >
+                <PlusIcon className="mr-2 h-4 w-4" />
+                New Task
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="">
-        <TaskTable tasks={tasks} onToggleComplete={handleToggleComplete} />
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <TaskTable
+            tasks={tasks}
+            handleSaveTask={handleSaveTask}
+            handleDeleteTask={handleDeleteTask}
+            handleToggleComplete={handleToggleComplete}
+          />
+        </CardContent>
+      </Card>
+
+      {/* New Task Sheet */}
+      {newTaskOpen && (
+        <TaskSheet
+          task={null}
+          isOpen={newTaskOpen}
+          setOpen={setNewTaskOpen}
+          categories={[{ id: "1", name: "Category 1" }]}
+          onSave={handleSaveTask}
+          onDelete={handleDeleteTask}
+        />
+      )}
+    </>
   );
 }

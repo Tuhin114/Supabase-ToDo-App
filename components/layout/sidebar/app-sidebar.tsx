@@ -154,12 +154,12 @@ const data = {
     },
     {
       name: "Today",
-      url: "#",
+      url: "today",
       icon: ListTodo,
     },
     {
       name: "Calendar",
-      url: "#",
+      url: "calendar",
       icon: CalendarDays,
     },
     {

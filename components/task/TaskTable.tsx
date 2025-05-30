@@ -7,29 +7,42 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, Trash2, Edit, MoreVertical } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 import { StatusBadge } from "../layout/task-badges/StatusBadge";
 import { Task } from "@/types/Task";
 import { PriorityBadge } from "../layout/task-badges/PriorityBadge";
 import { CategoryBadge } from "../layout/task-badges/CategoryBadge";
 import { TimeBadge } from "../layout/task-badges/TimeBadge";
-import React from "react";
-import { TaskBar } from "./TaskBar";
+import React, { useState } from "react";
+import TaskSheet from "./TaskSheet";
+import { Button } from "../ui/button";
+import { ChevronRight } from "lucide-react";
 
 interface TaskTableProps {
   tasks: Task[];
-  onToggleComplete: (taskId: string) => void;
+  handleSaveTask: (formData: FormData) => Promise<{ error?: string }>;
+  handleDeleteTask: (taskId: string) => Promise<{ error?: string }>;
+  handleToggleComplete: (taskId: string) => void;
 }
 
-export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
+export const TaskTable = ({
+  tasks,
+  handleSaveTask,
+  handleDeleteTask,
+  handleToggleComplete,
+}: TaskTableProps) => {
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editTaskOpen, setEditTaskOpen] = useState(false);
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setEditTaskOpen(true);
+  };
+
+  // const handleCloseEditTask = () => {
+  //   setEditTaskOpen(false);
+  //   setSelectedTask(null);
+  // };
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16">
@@ -46,38 +59,46 @@ export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
     <div className="rounded-lg border border-sidebar-border overflow-hidden">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-muted">
-          <TableRow className="">
+          <TableRow>
             <TableHead className="w-12"></TableHead>
-            <TableHead className="">Task</TableHead>
-            <TableHead className="">Status</TableHead>
-            <TableHead className="">Priority</TableHead>
-            <TableHead className="">Category</TableHead>
-            <TableHead className="">Time Estimate</TableHead>
-            <TableHead className="">Time Left</TableHead>
-            <TableHead className="">Subtasks</TableHead>
-            <TableHead className="w-12 "></TableHead>
-            <TableHead className="w-12 "></TableHead>
+            <TableHead>Task</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Time Estimate</TableHead>
+            <TableHead>Time Left</TableHead>
+            <TableHead>Subtasks</TableHead>
+            <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
-            <React.Fragment key={task.id}>
+          {tasks.map((task, index) => {
+            const timeEstimate = task.time?.timeEstimate;
+            if (!task.time) {
+              console.warn(`[Task ${index}] Missing 'time' field`, task);
+            } else if (!timeEstimate) {
+              console.warn(`[Task ${index}] Missing 'timeEstimate'`, task.time);
+            }
+
+            return (
               <TableRow
                 key={task.id}
-                className={`border-sidebar-border transition-all duration-200  hover:bg-muted/10 ${
+                className={`hover:bg-muted/10 transition ${
                   task.completed ? "opacity-50" : ""
                 }`}
               >
                 <TableCell>
                   <Checkbox
-                    checked={task.completed || false}
-                    onCheckedChange={() => onToggleComplete(task.id)}
-                    className="border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    checked={task.completed}
+                    onCheckedChange={() => handleToggleComplete(task.id)}
                   />
                 </TableCell>
                 <TableCell>
-                  <div className="space-y-2">
-                    <div className="font-medium text-lg">{task.title}</div>
+                  <div
+                    className="font-medium text-lg cursor-pointer"
+                    onClick={() => handleTaskClick(task)}
+                  >
+                    {task.title}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -90,56 +111,44 @@ export const TaskTable = ({ tasks, onToggleComplete }: TaskTableProps) => {
                   <CategoryBadge category={task.category} />
                 </TableCell>
                 <TableCell>
-                  <TimeBadge time={task.timeAllocated} />
+                  {timeEstimate ? (
+                    <TimeBadge time={timeEstimate} />
+                  ) : (
+                    <span className="text-muted">—</span>
+                  )}
                 </TableCell>
-                <TableCell className="min-w-[120px]">
-                  <span>2 days</span>
+                <TableCell>—</TableCell>
+                <TableCell className="text-center">
+                  {task.subtasks.length}
                 </TableCell>
-                <TableCell className="text-center min-w-[100px]">
-                  <span>2</span>
-                </TableCell>
-
-                {/* <TableCell className="text-right pr-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="border-sidebar-border"
-                    >
-                      <DropdownMenuItem>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {}}>
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell> */}
-
                 <TableCell>
-                  <TaskBar
-                    task={task}
-                    categories={[]}
-                    onClose={() => {}}
-                    onTaskUpdate={() => {}}
-                    onAddCategory={() => {}}
-                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-8 w-8 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                    onClick={() => handleTaskClick(task)}
+                  >
+                    <ChevronRight />
+                  </Button>
                 </TableCell>
               </TableRow>
-            </React.Fragment>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
+
+      {/* Edit Task Sheet */}
+
+      {selectedTask && (
+        <TaskSheet
+          task={selectedTask}
+          isOpen={editTaskOpen}
+          setOpen={setEditTaskOpen}
+          categories={[{ id: "1", name: "Category 1" }]}
+          onSave={handleSaveTask}
+          onDelete={handleDeleteTask}
+        />
+      )}
     </div>
   );
 };

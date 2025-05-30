@@ -50,7 +50,6 @@ interface TaskDetailsProps {
   categories: Category[];
   onTaskUpdate: (task: Task) => void;
   onAddCategory: (category: Category) => void;
-  onClose: () => void;
 }
 
 export function TaskBar({
@@ -58,7 +57,6 @@ export function TaskBar({
   categories,
   onTaskUpdate,
   onAddCategory,
-  onClose,
 }: TaskDetailsProps) {
   const [editedTask, setEditedTask] = useState<Task>(task);
   const [newTag, setNewTag] = useState("");
@@ -67,11 +65,17 @@ export function TaskBar({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   const handleSave = () => {
-    onTaskUpdate(editedTask);
+    if (editedTask) {
+      onTaskUpdate(editedTask);
+    }
   };
 
   const handleAddTag = () => {
-    if (newTag.trim() && !editedTask.tags.includes(newTag.trim())) {
+    if (
+      newTag.trim() &&
+      editedTask &&
+      !editedTask.tags.includes(newTag.trim())
+    ) {
       setEditedTask({
         ...editedTask,
         tags: [...editedTask.tags, newTag.trim()],
@@ -284,7 +288,7 @@ export function TaskBar({
               >
                 <DialogTrigger asChild>
                   <Button size="sm" className="">
-                    <Plus className="h-4 w-4 mr-2" /> Add Category
+                    <Plus className="h-4 w-4 mr-2" /> Add New
                   </Button>
                 </DialogTrigger>
                 <DialogContent className=" shadow-xl">
@@ -300,7 +304,7 @@ export function TaskBar({
                     />
                     <div className="flex gap-2">
                       <Button onClick={handleAddCategory} className="">
-                        Add Category
+                        Add New
                       </Button>
                       <Button
                         variant="outline"
@@ -436,7 +440,7 @@ export function TaskBar({
                 onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
               />
               <Button onClick={handleAddTag} size="sm" className="">
-                <Plus className="h-4 w-4 mr-2" /> Add Tag
+                <Plus className="h-4 w-4 mr-2" /> Add New
               </Button>
             </div>
           </div>
@@ -483,7 +487,7 @@ export function TaskBar({
                 onKeyPress={(e) => e.key === "Enter" && handleAddSubtask()}
               />
               <Button onClick={handleAddSubtask} size="sm" className="">
-                <Plus className="h-4 w-4 mr-2" /> Add Subtask
+                <Plus className="h-4 w-4 mr-2" /> Add New
               </Button>
             </div>
           </div>
