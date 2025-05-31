@@ -1,17 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { RiCalendarEventLine } from "@remixicon/react";
+import { RiTaskLine } from "@remixicon/react";
 import { addDays, format, isToday } from "date-fns";
-import { CalendarEvent } from "./types";
-import { AgendaDaysToShow } from "./constants";
-import { getAgendaEventsForDay } from "./utils";
-import { EventItem } from "./event-item";
+
+import { EventItem } from "./event/event-item";
+import { Task } from "@/types/Task";
+import { AgendaDaysToShow } from "@/constants/constants";
+import { getAgendaEventsForDay } from "./utils/utiles";
 
 interface AgendaViewProps {
   currentDate: Date;
-  events: CalendarEvent[];
-  onEventSelect: (event: CalendarEvent) => void;
+  events: Task[];
+  onEventSelect: (event: Task) => void;
 }
 
 export function AgendaView({
@@ -27,7 +28,7 @@ export function AgendaView({
     );
   }, [currentDate]);
 
-  const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
+  const handleEventClick = (event: Task, e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Agenda view event clicked:", event);
     onEventSelect(event);
@@ -42,10 +43,7 @@ export function AgendaView({
     <div className="border-border/70 border-t px-4">
       {!hasEvents ? (
         <div className="flex min-h-[70svh] flex-col items-center justify-center py-16 text-center">
-          <RiCalendarEventLine
-            size={32}
-            className="text-muted-foreground/50 mb-2"
-          />
+          <RiTaskLine size={32} className="text-muted-foreground/50 mb-2" />
           <h3 className="text-lg font-medium">No events found</h3>
           <p className="text-muted-foreground">
             There are no events scheduled for this time period.

@@ -13,24 +13,25 @@ import {
   startOfDay,
 } from "date-fns";
 
-import { EndHour, StartHour, WeekCellsHeight } from "@/components/constants";
-import { CalendarEvent } from "./types";
-import { isMultiDayEvent } from "./utils";
-import { useCurrentTimeIndicator } from "./use-current-time-indicator";
-import { EventItem } from "./event-item";
-import { DraggableEvent } from "./draggable-event";
+import { EndHour, StartHour, WeekCellsHeight } from "@/constants/constants";
+
+import { EventItem } from "./event/event-item";
+import { DraggableEvent } from "./dnd/draggable-event";
 import { cn } from "@/lib/utils";
-import { DroppableCell } from "./droppable-cell";
+import { DroppableCell } from "./dnd/droppable-cell";
+import { Task } from "@/types/Task";
+import { useCurrentTimeIndicator } from "@/hooks/calendar/use-current-time-indicator";
+import { isMultiDayEvent } from "./utils/utiles";
 
 interface DayViewProps {
   currentDate: Date;
-  events: CalendarEvent[];
-  onEventSelect: (event: CalendarEvent) => void;
+  events: Task[];
+  onEventSelect: (event: Task) => void;
   onEventCreate: (startTime: Date) => void;
 }
 
 interface PositionedEvent {
-  event: CalendarEvent;
+  event: Task;
   top: number;
   height: number;
   left: number;
@@ -55,8 +56,8 @@ export function DayView({
   const dayEvents = useMemo(() => {
     return events
       .filter((event) => {
-        const eventStart = new Date(event.start);
-        const eventEnd = new Date(event.end);
+        const eventStart = new Date(event.time.start);
+        const eventEnd = new Date(event.time.end);
         return (
           isSameDay(currentDate, eventStart) ||
           isSameDay(currentDate, eventEnd) ||
@@ -64,7 +65,8 @@ export function DayView({
         );
       })
       .sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+        (a, b) =>
+          new Date(a.time.start).getTime() - new Date(b.time.start).getTime()
       );
   }, [currentDate, events]);
 
@@ -72,7 +74,7 @@ export function DayView({
   const allDayEvents = useMemo(() => {
     return dayEvents.filter((event) => {
       // Include explicitly marked all-day events or multi-day events
-      return event.allDay || isMultiDayEvent(event);
+      return event.time.allDay || isMultiDayEvent(event);
     });
   }, [dayEvents]);
 
@@ -80,7 +82,7 @@ export function DayView({
   const timeEvents = useMemo(() => {
     return dayEvents.filter((event) => {
       // Exclude all-day events and multi-day events
-      return !event.allDay && !isMultiDayEvent(event);
+      return !event.time.allDay && !isMultiDayEvent(event);
     });
   }, [dayEvents]);
 
@@ -91,10 +93,10 @@ export function DayView({
 
     // Sort events by start time and duration
     const sortedEvents = [...timeEvents].sort((a, b) => {
-      const aStart = new Date(a.start);
-      const bStart = new Date(b.start);
-      const aEnd = new Date(a.end);
-      const bEnd = new Date(b.end);
+      const aStart = new Date(a.time.start);
+      const bStart = new Date(b.time.start);
+      const aEnd = new Date(a.time.end);
+      const bEnd = new Date(b.time.end);
 
       // First sort by start time
       if (aStart < bStart) return -1;
@@ -107,11 +109,11 @@ export function DayView({
     });
 
     // Track columns for overlapping events
-    const columns: { event: CalendarEvent; end: Date }[][] = [];
+    const columns: { event: Task; end: Date }[][] = [];
 
     sortedEvents.forEach((event) => {
-      const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
+      const eventStart = new Date(event.time.start);
+      const eventEnd = new Date(event.time.end);
 
       // Adjust start and end times if they're outside this day
       const adjustedStart = isSameDay(currentDate, eventStart)
@@ -141,7 +143,10 @@ export function DayView({
           const overlaps = col.some((c) =>
             areIntervalsOverlapping(
               { start: adjustedStart, end: adjustedEnd },
-              { start: new Date(c.event.start), end: new Date(c.event.end) }
+              {
+                start: new Date(c.event.time.start),
+                end: new Date(c.event.time.end),
+              }
             )
           );
           if (!overlaps) {
@@ -174,7 +179,7 @@ export function DayView({
     return result;
   }, [currentDate, timeEvents]);
 
-  const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
+  const handleEventClick = (event: Task, e: React.MouseEvent) => {
     e.stopPropagation();
     onEventSelect(event);
   };
@@ -197,8 +202,8 @@ export function DayView({
             </div>
             <div className="border-border/70 relative border-r p-1 last:border-r-0">
               {allDayEvents.map((event) => {
-                const eventStart = new Date(event.start);
-                const eventEnd = new Date(event.end);
+                const eventStart = new Date(event.time.start);
+                const eventEnd = new Date(event.time.end);
                 const isFirstDay = isSameDay(currentDate, eventStart);
                 const isLastDay = isSameDay(currentDate, eventEnd);
 

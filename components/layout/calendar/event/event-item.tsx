@@ -4,11 +4,12 @@ import { useMemo } from "react";
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { differenceInMinutes, format, getMinutes, isPast } from "date-fns";
-import { CalendarEvent } from "./types";
+
 import { cn } from "@/lib/utils";
-import { getBorderRadiusClasses, getEventColorClasses } from "./utils";
-import { AlarmClock, CircleCheckBig, TriangleAlert } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { CircleCheckBig, TriangleAlert } from "lucide-react";
+import { Badge } from "../../../ui/badge";
+import { Task } from "@/types/Task";
+import { getBorderRadiusClasses, getEventColorClasses } from "../utils/utiles";
 
 // Using date-fns format with custom formatting:
 // 'h' - hours (1-12)
@@ -19,7 +20,7 @@ const formatTimeWithOptionalMinutes = (date: Date) => {
 };
 
 interface EventWrapperProps {
-  event: CalendarEvent;
+  event: Task;
   isFirstDay?: boolean;
   isLastDay?: boolean;
   isDragging?: boolean;
@@ -52,9 +53,10 @@ function EventWrapper({
   const displayEnd = currentTime
     ? new Date(
         new Date(currentTime).getTime() +
-          (new Date(event.end).getTime() - new Date(event.start).getTime())
+          (new Date(event.time.end).getTime() -
+            new Date(event.time.start).getTime())
       )
-    : new Date(event.end);
+    : new Date(event.time.end);
 
   const isEventInPast = isPast(displayEnd);
 
@@ -80,7 +82,7 @@ function EventWrapper({
 }
 
 interface EventItemProps {
-  event: CalendarEvent;
+  event: Task;
   view: "month" | "week" | "day" | "agenda";
   isDragging?: boolean;
   onClick?: (e: React.MouseEvent) => void;
@@ -116,17 +118,18 @@ export function EventItem({
 
   // Use the provided currentTime (for dragging) or the event's actual time
   const displayStart = useMemo(() => {
-    return currentTime || new Date(event.start);
-  }, [currentTime, event.start]);
+    return currentTime || new Date(event.time.start);
+  }, [currentTime, event.time.start]);
 
   const displayEnd = useMemo(() => {
     return currentTime
       ? new Date(
           new Date(currentTime).getTime() +
-            (new Date(event.end).getTime() - new Date(event.start).getTime())
+            (new Date(event.time.end).getTime() -
+              new Date(event.time.start).getTime())
         )
-      : new Date(event.end);
-  }, [currentTime, event.start, event.end]);
+      : new Date(event.time.end);
+  }, [currentTime, event.time.start, event.time.end]);
 
   // Calculate event duration in minutes
   const durationMinutes = useMemo(() => {
@@ -134,7 +137,7 @@ export function EventItem({
   }, [displayStart, displayEnd]);
 
   const getEventTime = () => {
-    if (event.allDay) return "All day";
+    if (event.time.allDay) return "All day";
 
     // For short events (less than 45 minutes), only show start time
     if (durationMinutes < 45) {
@@ -165,7 +168,7 @@ export function EventItem({
       >
         {children || (
           <span className="truncate">
-            {!event.allDay && (
+            {!event.time.allDay && (
               <span className="truncate font-normal opacity-70 sm:text-[11px]">
                 {formatTimeWithOptionalMinutes(displayStart)}{" "}
               </span>
@@ -228,7 +231,7 @@ export function EventItem({
         getEventColorClasses(eventColor),
         className
       )}
-      data-past-event={isPast(new Date(event.end)) || undefined}
+      data-past-event={isPast(new Date(event.time.end)) || undefined}
       onClick={onClick}
       onMouseDown={onMouseDown}
       onTouchStart={onTouchStart}
@@ -249,7 +252,7 @@ export function EventItem({
         </Badge>
       </div>
       <div className="text-xs opacity-70 flex">
-        {event.allDay ? (
+        {event.time.allDay ? (
           <span>All day</span>
         ) : (
           <span className="uppercase">

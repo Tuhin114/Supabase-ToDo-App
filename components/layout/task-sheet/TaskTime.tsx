@@ -20,13 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TimeEstimated from "./TimeEstemated";
-import { LocalTimeState } from "@/types/Time";
+import { LocalTimeState } from "@/types/Calender";
 import {
   convertToTaskTime,
   initializeTimeState,
   TIME_OPTIONS,
   validateAndAdjustTimes,
-} from "../calendar/utils/TimeUtils";
+} from "../calendar/utils/time-utiles";
 import type { TaskTime } from "@/types/Task";
 
 interface TimeProps {
@@ -34,12 +34,25 @@ interface TimeProps {
 }
 
 export function TaskTimePicker({ defaultTime }: TimeProps) {
-  // Initialize state from defaultTime prop - KEEP this useMemo as it's expensive initialization
-  const initialState = useMemo(
-    () => initializeTimeState(defaultTime),
-    [defaultTime]
-  );
+  console.log("=== TaskTimePicker render ===");
+  console.log("defaultTime:", defaultTime);
+  console.log("defaultTime.timeEstimate:", defaultTime?.timeEstimate);
+
+  const initialState = useMemo(() => {
+    const result = initializeTimeState(defaultTime);
+    console.log("initializeTimeState result:", result);
+    console.log("result.timeEstimate:", result.timeEstimate);
+    return result;
+  }, [defaultTime]);
+
+  console.log("initialState after useMemo:", initialState);
+  console.log("initialState.timeEstimate:", initialState.timeEstimate);
+
   const [localState, setLocalState] = useState<LocalTimeState>(initialState);
+
+  console.log("localState after useState:", localState);
+  console.log("localState.timeEstimate:", localState.timeEstimate);
+
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
 
@@ -78,7 +91,16 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
 
   // Simple state update for non-time fields - REMOVE useCallback (not passed to children)
   function updateState(updates: Partial<LocalTimeState>) {
-    setLocalState((prev) => ({ ...prev, ...updates }));
+    console.log("1. updateState called with:", updates);
+
+    setLocalState((prev) => {
+      console.log("2. State updater running - prev:", prev);
+      const newState = { ...prev, ...updates };
+      console.log("3. State updater - newState:", newState);
+      return newState;
+    });
+
+    console.log("4. setLocalState called (but updater hasn't run yet)");
   }
 
   // Event handlers - REMOVE useCallback for handlers not passed to memoized children
@@ -157,7 +179,9 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
       <div className="flex gap-4">
         {/* Start Date */}
         <div className="flex-1 *:not-first:mt-1.5">
-          <Label htmlFor="start-date">Start Date</Label>
+          <Label htmlFor="start-date" className="space-y-2">
+            Start Date
+          </Label>
           <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -177,7 +201,7 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
                 />
               </Button>
             </PopoverTrigger>
-            {
+            {startDateOpen && (
               <PopoverContent className="w-auto p-2" align="start">
                 <Calendar
                   mode="single"
@@ -187,7 +211,7 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
                   aria-label="Start date calendar"
                 />
               </PopoverContent>
-            }
+            )}
           </Popover>
         </div>
 
@@ -241,16 +265,18 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-2" align="start">
-              <Calendar
-                mode="single"
-                selected={localState.endDate || undefined}
-                defaultMonth={localState.endDate || localState.startDate}
-                disabled={isEndDateDisabled}
-                onSelect={handleEndDateSelect}
-                aria-label="End date calendar"
-              />
-            </PopoverContent>
+            {endDateOpen && (
+              <PopoverContent className="w-auto p-2" align="start">
+                <Calendar
+                  mode="single"
+                  selected={localState.endDate || undefined}
+                  defaultMonth={localState.endDate || localState.startDate}
+                  disabled={isEndDateDisabled}
+                  onSelect={handleEndDateSelect}
+                  aria-label="End date calendar"
+                />
+              </PopoverContent>
+            )}
           </Popover>
         </div>
 

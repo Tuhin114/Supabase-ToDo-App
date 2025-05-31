@@ -1,6 +1,8 @@
-import { TaskTime } from "@/types/Task";
-import { LocalTimeState } from "@/types/Time";
+import { TaskTime, TimeUnit } from "@/types/Task";
+import { LocalTimeState } from "@/types/Calender";
 import { format, isBefore, isSameDay, set } from "date-fns";
+import { DEFAULT_TIME_UNIT, DEFAULT_TIME_VALUE } from "@/constants/constants";
+import { timeUnitOptions } from "@/constants/data";
 
 // Generate time options in 15-minute intervals
 export const TIME_OPTIONS = Array.from({ length: 96 }, (_, i) => {
@@ -43,7 +45,7 @@ export const initializeTimeState = (time: TaskTime): LocalTimeState => {
     startTime: format(startDate, "HH:mm"),
     endTime: endDate ? format(endDate, "HH:mm") : format(startDate, "HH:mm"),
     isAllDay: time.allDay ?? false,
-    timeEstimate: time.timeEstimate || "1 hr",
+    timeEstimate: time.timeEstimate || "1 hrs",
   };
 };
 
@@ -133,3 +135,41 @@ export const convertToTaskTime = (localState: LocalTimeState): TaskTime => {
     timeEstimate,
   };
 };
+
+interface ParsedTime {
+  value: string;
+  unit: TimeUnit;
+}
+
+export function parseTime(time: string, min: number, max: number): ParsedTime {
+  const trimmedTime = time.trim();
+  console.log("trimmedTime", trimmedTime);
+
+  if (!trimmedTime) {
+    return { value: DEFAULT_TIME_VALUE, unit: DEFAULT_TIME_UNIT };
+  }
+
+  const parts = trimmedTime.split(/\s+/);
+
+  if (parts.length < 2) {
+    return { value: DEFAULT_TIME_VALUE, unit: DEFAULT_TIME_UNIT };
+  }
+
+  const [valuePart, unitPart] = parts;
+
+  // Validate value part
+  const numericValue = Number(valuePart);
+  const validValue =
+    !isNaN(numericValue) && numericValue >= min && numericValue <= max
+      ? valuePart
+      : DEFAULT_TIME_VALUE;
+
+  // Validate unit part
+  const validUnit =
+    (timeUnitOptions.find((option) => option.value === unitPart)
+      ?.value as TimeUnit) || DEFAULT_TIME_UNIT;
+
+  console.log("Validated Time", validUnit, validValue);
+
+  return { value: validValue, unit: validUnit };
+}

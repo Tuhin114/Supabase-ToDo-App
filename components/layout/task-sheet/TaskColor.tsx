@@ -14,6 +14,8 @@ interface ColorPickerProps {
 export function TaskColorPicker({ defaultColor }: ColorPickerProps) {
   const [color, setColor] = useState<TaskColor>(defaultColor || "sky");
 
+  console.log(color);
+
   return (
     <div className="space-y-1.5">
       <Label htmlFor="color">Color</Label>

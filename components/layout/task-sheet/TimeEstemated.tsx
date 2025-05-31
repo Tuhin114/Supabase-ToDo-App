@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_TIME_UNIT, DEFAULT_TIME_VALUE } from "../calendar";
+import { parseTime } from "../calendar/utils/time-utiles";
 
 interface TimeEstimatedProps {
   time: string;
@@ -18,45 +20,6 @@ interface TimeEstimatedProps {
   max?: number;
   step?: number;
   disabled?: boolean;
-}
-
-interface ParsedTime {
-  value: string;
-  unit: TimeUnit;
-}
-
-const DEFAULT_TIME_VALUE = "1";
-const DEFAULT_TIME_UNIT: TimeUnit = "hrs";
-
-// Helper function - no memo needed for pure functions
-function parseTime(time: string, min: number, max: number): ParsedTime {
-  const trimmedTime = time.trim();
-
-  if (!trimmedTime) {
-    return { value: DEFAULT_TIME_VALUE, unit: DEFAULT_TIME_UNIT };
-  }
-
-  const parts = trimmedTime.split(/\s+/);
-
-  if (parts.length < 2) {
-    return { value: DEFAULT_TIME_VALUE, unit: DEFAULT_TIME_UNIT };
-  }
-
-  const [valuePart, unitPart] = parts;
-
-  // Validate value part
-  const numericValue = Number(valuePart);
-  const validValue =
-    !isNaN(numericValue) && numericValue >= min && numericValue <= max
-      ? valuePart
-      : DEFAULT_TIME_VALUE;
-
-  // Validate unit part
-  const validUnit =
-    (timeUnitOptions.find((option) => option.value === unitPart)
-      ?.value as TimeUnit) || DEFAULT_TIME_UNIT;
-
-  return { value: validValue, unit: validUnit };
 }
 
 export default function TimeEstimated({
@@ -69,6 +32,10 @@ export default function TimeEstimated({
 }: TimeEstimatedProps) {
   const [timeValue, setTimeValue] = useState<string>(DEFAULT_TIME_VALUE);
   const [timeUnit, setTimeUnit] = useState<TimeUnit>(DEFAULT_TIME_UNIT);
+
+  // console.log("time", time);
+  // console.log("timeValue", timeValue);
+  // console.log("timeUnit", timeUnit);
 
   // Sync local state with parsed time when prop changes
   useEffect(() => {

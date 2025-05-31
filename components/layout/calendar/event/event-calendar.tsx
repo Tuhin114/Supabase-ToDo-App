@@ -29,26 +29,27 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CalendarEvent, CalendarView } from "./types";
 import {
   AgendaDaysToShow,
   EventGap,
   EventHeight,
   WeekCellsHeight,
-} from "./constants";
-import { addHoursToDate } from "./utils";
-import { CalendarDndProvider } from "./calendar-dnd-context";
-import { MonthView } from "./month-view";
-import { WeekView } from "./week-view";
-import { DayView } from "./day-view";
-import { AgendaView } from "./agenda-view";
-import { EventDialog } from "./event-dialog";
+} from "@/constants/constants";
+import { CalendarDndProvider } from "../dnd/calendar-dnd-context";
+import { MonthView } from "../month-view";
+import { WeekView } from "../week-view";
+import { DayView } from "../day-view";
+import { AgendaView } from "../agenda-view";
+import { Task } from "@/types/Task";
+import TaskSheet, { FormState } from "../../../task/TaskSheet";
+import { TaskUpdateInput } from "@/app/(user-pages)/user/[id]/(tasks)/calendar/page";
+import { CalendarView } from "@/types/Calender";
 
 export interface EventCalendarProps {
-  events?: CalendarEvent[];
-  onEventAdd?: (event: CalendarEvent) => void;
-  onEventUpdate?: (event: CalendarEvent) => void;
-  onEventDelete?: (eventId: string) => void;
+  events?: Task[];
+  onEventAdd: (formData: FormData) => Promise<FormState>;
+  onEventUpdate: (event: TaskUpdateInput) => Promise<FormState>;
+  onEventDelete: (eventId: string) => Promise<FormState>;
   className?: string;
   initialView?: CalendarView;
 }
@@ -64,9 +65,9 @@ export default function EventCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>(initialView);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
-  );
+  const [selectedEvent, setSelectedEvent] = useState<Task | null>(null);
+  const [startTime, setStartTime] = useState<Date>(new Date());
+  console.log(startTime);
 
   // Add keyboard shortcuts for view switching
   useEffect(() => {
@@ -135,87 +136,27 @@ export default function EventCalendar({
     setCurrentDate(new Date());
   };
 
-  const handleEventSelect = (event: CalendarEvent) => {
+  const handleEventSelect = (event: Task) => {
     console.log("Event selected:", event); // Debug log
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
   };
 
-  const handleEventCreate = (startTime: Date) => {
+  const handleEventCreateAtTime = (startTime: Date) => {
     console.log("Creating new event at:", startTime); // Debug log
 
-    // Snap to 15-minute intervals
-    const minutes = startTime.getMinutes();
-    const remainder = minutes % 15;
-    if (remainder !== 0) {
-      if (remainder < 7.5) {
-        // Round down to nearest 15 min
-        startTime.setMinutes(minutes - remainder);
-      } else {
-        // Round up to nearest 15 min
-        startTime.setMinutes(minutes + (15 - remainder));
-      }
-      startTime.setSeconds(0);
-      startTime.setMilliseconds(0);
-    }
-
-    const newEvent: CalendarEvent = {
-      id: "",
-      title: "",
-      start: startTime,
-      end: addHoursToDate(startTime, 1),
-      allDay: false,
-    };
-    setSelectedEvent(newEvent);
+    setSelectedEvent(null);
+    setStartTime(startTime);
     setIsEventDialogOpen(true);
   };
 
-  const handleEventSave = (event: CalendarEvent) => {
-    if (event.id) {
-      onEventUpdate?.(event);
-      // Show toast notification when an event is updated
-      // toast(`Event "${event.title}" updated`, {
-      //   description: format(new Date(event.start), "MMM d, yyyy"),
-      //   position: "bottom-left",
-      // });
-    } else {
-      onEventAdd?.({
-        ...event,
-        id: Math.random().toString(36).substring(2, 11),
-      });
-      // Show toast notification when an event is added
-      // toast(`Event "${event.title}" added`, {
-      //   description: format(new Date(event.start), "MMM d, yyyy"),
-      //   position: "bottom-left",
-      // });
-    }
-    setIsEventDialogOpen(false);
-    setSelectedEvent(null);
+  const handleSaveTask = async (formData: FormData): Promise<FormState> => {
+    const isUpdate = formData.has("taskId");
+    return isUpdate ? onEventUpdate(formData) : onEventAdd(formData);
   };
 
-  const handleEventDelete = (eventId: string) => {
-    const deletedEvent = events.find((e) => e.id === eventId);
-    onEventDelete?.(eventId);
-    setIsEventDialogOpen(false);
-    setSelectedEvent(null);
-
-    // Show toast notification when an event is deleted
-    if (deletedEvent) {
-      // toast(`Event "${deletedEvent.title}" deleted`, {
-      //   description: format(new Date(deletedEvent.start), "MMM d, yyyy"),
-      //   position: "bottom-left",
-      // });
-    }
-  };
-
-  const handleEventUpdate = (updatedEvent: CalendarEvent) => {
-    onEventUpdate?.(updatedEvent);
-
-    // Show toast notification when an event is updated via drag and drop
-    // toast(`Event "${updatedEvent.title}" moved`, {
-    //   description: format(new Date(updatedEvent.start), "MMM d, yyyy"),
-    //   position: "bottom-left",
-    // });
+  const handleEventUpdate = (updatedEvent: TaskUpdateInput) => {
+    onEventUpdate(updatedEvent);
   };
 
   const viewTitle = useMemo(() => {
@@ -348,16 +289,17 @@ export default function EventCalendar({
             <Button
               className="aspect-square max-[479px]:p-0!"
               onClick={() => {
+                setStartTime(new Date());
                 setSelectedEvent(null); // Ensure we're creating a new event
                 setIsEventDialogOpen(true);
               }}
             >
               <PlusIcon
-                className="opacity-60 sm:-ms-1"
+                className="opacity-60 sm:-ms-1 mr-1"
                 size={16}
                 aria-hidden="true"
               />
-              <span className="max-sm:sr-only">New event</span>
+              <span className="max-sm:sr-only">New Task</span>
             </Button>
           </div>
         </div>
@@ -368,7 +310,7 @@ export default function EventCalendar({
               currentDate={currentDate}
               events={events}
               onEventSelect={handleEventSelect}
-              onEventCreate={handleEventCreate}
+              onEventCreate={handleEventCreateAtTime}
             />
           )}
           {view === "week" && (
@@ -376,7 +318,7 @@ export default function EventCalendar({
               currentDate={currentDate}
               events={events}
               onEventSelect={handleEventSelect}
-              onEventCreate={handleEventCreate}
+              onEventCreate={handleEventCreateAtTime}
             />
           )}
           {view === "day" && (
@@ -384,7 +326,7 @@ export default function EventCalendar({
               currentDate={currentDate}
               events={events}
               onEventSelect={handleEventSelect}
-              onEventCreate={handleEventCreate}
+              onEventCreate={handleEventCreateAtTime}
             />
           )}
           {view === "agenda" && (
@@ -396,7 +338,7 @@ export default function EventCalendar({
           )}
         </div>
 
-        <EventDialog
+        {/* <EventDialog
           event={selectedEvent}
           isOpen={isEventDialogOpen}
           onClose={() => {
@@ -405,6 +347,15 @@ export default function EventCalendar({
           }}
           onSave={handleEventSave}
           onDelete={handleEventDelete}
+        /> */}
+        <TaskSheet
+          categories={[{ id: "1", name: "Category 1" }]}
+          task={selectedEvent}
+          startTime={startTime}
+          isOpen={isEventDialogOpen}
+          setOpen={setIsEventDialogOpen}
+          onSave={handleSaveTask}
+          onDelete={onEventDelete}
         />
       </CalendarDndProvider>
     </div>

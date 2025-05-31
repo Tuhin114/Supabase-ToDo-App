@@ -123,7 +123,7 @@ function SubtaskItem({
 }
 
 export function SubTasks({ defaultSubtasks }: SubTaskProps) {
-  console.log("defaultSubtasks:", defaultSubtasks);
+  // console.log("defaultSubtasks:", defaultSubtasks);
   const [subtasks, setSubtasks] = useState<Subtask[]>(defaultSubtasks || []);
   const [newSubtask, setNewSubtask] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -233,7 +233,7 @@ export function SubTasks({ defaultSubtasks }: SubTaskProps) {
   const hasSubtasks = totalCount > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">
           Subtasks

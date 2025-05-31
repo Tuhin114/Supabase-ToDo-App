@@ -87,7 +87,7 @@ export const TaskTags: React.FC<TaskTagsProps> = memo(({ defaultTags }) => {
           />
         ))}
       </div>
-      <div className="flex gap-2 mt-2">
+      <div className="flex gap-2">
         <Input
           value={newTag}
           onChange={handleInputChange}

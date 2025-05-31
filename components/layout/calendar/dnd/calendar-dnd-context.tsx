@@ -22,12 +22,14 @@ import {
   type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { addMinutes, differenceInMinutes } from "date-fns";
-import { CalendarEvent } from "./types";
-import { EventItem } from "./event-item";
+
+import { EventItem } from "../event/event-item";
+import { Task } from "@/types/Task";
+import { TaskUpdateInput } from "@/app/(user-pages)/user/[id]/(tasks)/calendar/page";
 
 // Define the context type
 type CalendarDndContextType = {
-  activeEvent: CalendarEvent | null;
+  activeEvent: Task | null;
   activeId: UniqueIdentifier | null;
   activeView: "month" | "week" | "day" | null;
   currentTime: Date | null;
@@ -62,14 +64,14 @@ export const useCalendarDnd = () => useContext(CalendarDndContext);
 // Props for the provider
 interface CalendarDndProviderProps {
   children: ReactNode;
-  onEventUpdate: (event: CalendarEvent) => void;
+  onEventUpdate: (event: TaskUpdateInput) => void;
 }
 
 export function CalendarDndProvider({
   children,
   onEventUpdate,
 }: CalendarDndProviderProps) {
-  const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null);
+  const [activeEvent, setActiveEvent] = useState<Task | null>(null);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [activeView, setActiveView] = useState<"month" | "week" | "day" | null>(
     null
@@ -133,7 +135,7 @@ export function CalendarDndProvider({
       multiDayWidth: eventMultiDayWidth,
       dragHandlePosition: eventDragHandlePosition,
     } = active.data.current as {
-      event: CalendarEvent;
+      event: Task;
       view: "month" | "week" | "day";
       height?: number;
       isMultiDay?: boolean;
@@ -151,7 +153,7 @@ export function CalendarDndProvider({
     setActiveEvent(calendarEvent);
     setActiveId(active.id);
     setActiveView(view);
-    setCurrentTime(new Date(calendarEvent.start));
+    setCurrentTime(new Date(calendarEvent.time.start));
     setIsMultiDay(eventIsMultiDay || false);
     setMultiDayWidth(eventMultiDayWidth || null);
     setDragHandlePosition(eventDragHandlePosition || null);
@@ -246,7 +248,7 @@ export function CalendarDndProvider({
       }
 
       const activeData = active.data.current as {
-        event?: CalendarEvent;
+        event?: Task;
         view?: string;
       };
       const overData = over.data.current as { date?: Date; time?: number };
@@ -287,8 +289,8 @@ export function CalendarDndProvider({
       }
 
       // Calculate new end time based on the original duration
-      const originalStart = new Date(calendarEvent.start);
-      const originalEnd = new Date(calendarEvent.end);
+      const originalStart = new Date(calendarEvent.time.start);
+      const originalEnd = new Date(calendarEvent.time.end);
       const durationMinutes = differenceInMinutes(originalEnd, originalStart);
       const newEnd = addMinutes(newStart, durationMinutes);
 
@@ -303,9 +305,13 @@ export function CalendarDndProvider({
       if (hasStartTimeChanged) {
         // Update the event only if the time has changed
         onEventUpdate({
-          ...calendarEvent,
-          start: newStart,
-          end: newEnd,
+          taskId: calendarEvent.id,
+          time: {
+            start: newStart,
+            end: newEnd,
+            allDay: calendarEvent.time.allDay,
+            timeEstimate: calendarEvent.time.timeEstimate,
+          },
         });
       }
     } catch (error) {

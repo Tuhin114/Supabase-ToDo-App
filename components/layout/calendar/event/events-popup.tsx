@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useRef } from "react";
 import { format, isSameDay } from "date-fns";
 import { XIcon } from "lucide-react";
-import { CalendarEvent } from "./types";
 import { EventItem } from "./event-item";
+import { Task } from "@/types/Task";
 
 interface EventsPopupProps {
   date: Date;
-  events: CalendarEvent[];
+  events: Task[];
   position: { top: number; left: number };
   onClose: () => void;
-  onEventSelect: (event: CalendarEvent) => void;
+  onEventSelect: (event: Task) => void;
 }
 
 export function EventsPopup({
@@ -54,7 +54,7 @@ export function EventsPopup({
     };
   }, [onClose]);
 
-  const handleEventClick = (event: CalendarEvent) => {
+  const handleEventClick = (event: Task) => {
     onEventSelect(event);
     onClose();
   };
@@ -108,8 +108,8 @@ export function EventsPopup({
           <div className="text-muted-foreground py-2 text-sm">No events</div>
         ) : (
           events.map((event) => {
-            const eventStart = new Date(event.start);
-            const eventEnd = new Date(event.end);
+            const eventStart = new Date(event.time.start);
+            const eventEnd = new Date(event.time.end);
             const isFirstDay = isSameDay(date, eventStart);
             const isLastDay = isSameDay(date, eventEnd);
 

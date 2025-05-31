@@ -4,12 +4,12 @@ import { useRef, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { differenceInDays } from "date-fns";
-import { CalendarEvent } from "./types";
 import { useCalendarDnd } from "./calendar-dnd-context";
-import { EventItem } from "./event-item";
+import { EventItem } from "../event/event-item";
+import { Task } from "@/types/Task";
 
 interface DraggableEventProps {
-  event: CalendarEvent;
+  event: Task;
   view: "month" | "week" | "day";
   showTime?: boolean;
   onClick?: (e: React.MouseEvent) => void;
@@ -41,10 +41,12 @@ export function DraggableEvent({
   } | null>(null);
 
   // Check if this is a multi-day event
-  const eventStart = new Date(event.start);
-  const eventEnd = new Date(event.end);
+  const eventStart = new Date(event.time.start);
+  const eventEnd = new Date(event.time.end);
   const isMultiDayEvent =
-    isMultiDay || event.allDay || differenceInDays(eventEnd, eventStart) >= 1;
+    isMultiDay ||
+    event.time.allDay ||
+    differenceInDays(eventEnd, eventStart) >= 1;
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({

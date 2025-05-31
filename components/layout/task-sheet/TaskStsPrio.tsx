@@ -56,7 +56,7 @@ export const TaskStatusPrioritySelects = memo<StatusPrioritySelectsProps>(
     defaultStatus = "todo",
     defaultPriority = "moderate",
     disabled = false,
-    className = "grid grid-cols-2 gap-4 my-4",
+    className = "grid grid-cols-2 gap-4 my-1",
     onStatusChange,
     onPriorityChange,
   }) => {

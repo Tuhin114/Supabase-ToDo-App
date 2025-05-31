@@ -11,7 +11,7 @@ export const sampleTasks: Task[] = [
     time: {
       start: new Date("2025-06-01T09:00:00.000Z"),
       end: new Date("2025-06-30T17:00:00.000Z"),
-      timeEstimate: "1 month",
+      timeEstimate: "1 months",
       allDay: false,
     },
     tags: ["event", "product", "launch"],

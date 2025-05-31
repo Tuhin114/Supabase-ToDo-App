@@ -9,6 +9,38 @@ const config = {
     "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
+  safelist: [
+    // Background colors
+    "bg-sky-400",
+    "bg-amber-400",
+    "bg-violet-400",
+    "bg-rose-400",
+    "bg-emerald-400",
+    "bg-orange-400",
+
+    // Border colors
+    "border-sky-400",
+    "border-amber-400",
+    "border-violet-400",
+    "border-rose-400",
+    "border-emerald-400",
+    "border-orange-400",
+
+    // State variants
+    "data-[state=checked]:bg-sky-400",
+    "data-[state=checked]:bg-amber-400",
+    "data-[state=checked]:bg-violet-400",
+    "data-[state=checked]:bg-rose-400",
+    "data-[state=checked]:bg-emerald-400",
+    "data-[state=checked]:bg-orange-400",
+
+    "data-[state=checked]:border-sky-400",
+    "data-[state=checked]:border-amber-400",
+    "data-[state=checked]:border-violet-400",
+    "data-[state=checked]:border-rose-400",
+    "data-[state=checked]:border-emerald-400",
+    "data-[state=checked]:border-orange-400",
+  ],
   theme: {
     container: {
       center: true,

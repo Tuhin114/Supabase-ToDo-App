@@ -19,23 +19,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarEvent } from "./types";
 import { useEventVisibility } from "@/hooks/calendar/use-event-visibility";
-import { DefaultStartHour, EventGap, EventHeight } from "./constants";
+import { DefaultStartHour, EventGap, EventHeight } from "@/constants/constants";
 import {
   getAllEventsForDay,
   getEventsForDay,
   getSpanningEventsForDay,
   sortEvents,
-} from "./utils";
-import { DroppableCell } from "./droppable-cell";
-import { EventItem } from "./event-item";
-import { DraggableEvent } from "./draggable-event";
+} from "./utils/utiles";
+import { DroppableCell } from "./dnd/droppable-cell";
+import { EventItem } from "./event/event-item";
+import { DraggableEvent } from "./dnd/draggable-event";
+import { Task } from "@/types/Task";
 
 interface MonthViewProps {
   currentDate: Date;
-  events: CalendarEvent[];
-  onEventSelect: (event: CalendarEvent) => void;
+  events: Task[];
+  onEventSelect: (event: Task) => void;
   onEventCreate: (startTime: Date) => void;
 }
 
@@ -76,7 +76,7 @@ export function MonthView({
     return result;
   }, [days]);
 
-  const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
+  const handleEventClick = (event: Task, e: React.MouseEvent) => {
     e.stopPropagation();
     onEventSelect(event);
   };
@@ -130,6 +130,8 @@ export function MonthView({
                 ? allDayEvents.length - visibleCount
                 : 0;
 
+              const isItToday = isToday(day);
+
               return (
                 <div
                   key={day.toString()}
@@ -146,7 +148,9 @@ export function MonthView({
                       onEventCreate(startTime);
                     }}
                   >
-                    <div className="group-data-today:bg-primary group-data-today:text-primary-foreground mt-1 inline-flex size-6 items-center justify-center rounded-full text-sm">
+                    <div
+                      className={`${isItToday ? "bg-primary text-primary-foreground" : ""} mt-1 inline-flex size-6 items-center justify-center rounded-full text-sm`}
+                    >
                       {format(day, "d")}
                     </div>
                     <div
@@ -154,8 +158,8 @@ export function MonthView({
                       className="min-h-[calc((var(--event-height)+var(--event-gap))*2)] sm:min-h-[calc((var(--event-height)+var(--event-gap))*3)] lg:min-h-[calc((var(--event-height)+var(--event-gap))*4)]"
                     >
                       {sortEvents(allDayEvents).map((event, index) => {
-                        const eventStart = new Date(event.start);
-                        const eventEnd = new Date(event.end);
+                        const eventStart = new Date(event.time.start);
+                        const eventEnd = new Date(event.time.end);
                         const isFirstDay = isSameDay(day, eventStart);
                         const isLastDay = isSameDay(day, eventEnd);
 
@@ -178,11 +182,11 @@ export function MonthView({
                                 isFirstDay={isFirstDay}
                                 isLastDay={isLastDay}
                               >
-                                <div className="invisible" aria-hidden={true}>
-                                  {!event.allDay && (
+                                <div className="invisible" aria-hidden="true">
+                                  {!event.time.allDay && (
                                     <span>
                                       {format(
-                                        new Date(event.start),
+                                        new Date(event.time.start),
                                         "h:mm"
                                       )}{" "}
                                     </span>
@@ -239,8 +243,8 @@ export function MonthView({
                               </div>
                               <div className="space-y-1">
                                 {sortEvents(allEvents).map((event) => {
-                                  const eventStart = new Date(event.start);
-                                  const eventEnd = new Date(event.end);
+                                  const eventStart = new Date(event.time.start);
+                                  const eventEnd = new Date(event.time.end);
                                   const isFirstDay = isSameDay(day, eventStart);
                                   const isLastDay = isSameDay(day, eventEnd);
 
