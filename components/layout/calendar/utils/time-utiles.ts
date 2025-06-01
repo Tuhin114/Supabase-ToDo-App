@@ -1,6 +1,17 @@
 import { TaskTime, TimeUnit } from "@/types/Task";
 import { LocalTimeState } from "@/types/Calender";
-import { format, isBefore, isSameDay, set } from "date-fns";
+import {
+  format,
+  isBefore,
+  isSameDay,
+  set,
+  differenceInYears,
+  differenceInMonths,
+  differenceInWeeks,
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+} from "date-fns";
 import { DEFAULT_TIME_UNIT, DEFAULT_TIME_VALUE } from "@/constants/constants";
 import { timeUnitOptions } from "@/constants/data";
 
@@ -143,7 +154,6 @@ interface ParsedTime {
 
 export function parseTime(time: string, min: number, max: number): ParsedTime {
   const trimmedTime = time.trim();
-  console.log("trimmedTime", trimmedTime);
 
   if (!trimmedTime) {
     return { value: DEFAULT_TIME_VALUE, unit: DEFAULT_TIME_UNIT };
@@ -165,11 +175,58 @@ export function parseTime(time: string, min: number, max: number): ParsedTime {
       : DEFAULT_TIME_VALUE;
 
   // Validate unit part
-  const validUnit =
-    (timeUnitOptions.find((option) => option.value === unitPart)
-      ?.value as TimeUnit) || DEFAULT_TIME_UNIT;
+  const foundOption = timeUnitOptions.find(
+    (option) => option.value === unitPart
+  );
 
-  console.log("Validated Time", validUnit, validValue);
+  const validUnit = (foundOption?.value as TimeUnit) || DEFAULT_TIME_UNIT;
 
   return { value: validValue, unit: validUnit };
+}
+
+export function getTimeLeft(startDate: Date, endDate: Date): string {
+  // Validate input dates
+  if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+    throw new Error("Both startDate and endDate must be valid Date objects");
+  }
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    throw new Error("Invalid date provided");
+  }
+
+  // Determine direction and get absolute differences
+  const isPast = isBefore(endDate, startDate);
+  const [earlierDate, laterDate] = isPast
+    ? [endDate, startDate]
+    : [startDate, endDate];
+
+  // Calculate differences in various units
+  const years = differenceInYears(laterDate, earlierDate);
+  const months = differenceInMonths(laterDate, earlierDate);
+  const weeks = differenceInWeeks(laterDate, earlierDate);
+  const days = differenceInDays(laterDate, earlierDate);
+  const hours = differenceInHours(laterDate, earlierDate);
+  const minutes = differenceInMinutes(laterDate, earlierDate);
+
+  let result: string;
+
+  // Determine the most appropriate unit
+  if (years >= 1) {
+    result = `${years} ${years === 1 ? "year" : "years"}`;
+  } else if (months >= 1) {
+    result = `${months} ${months === 1 ? "month" : "months"}`;
+  } else if (weeks >= 1) {
+    result = `${weeks} ${weeks === 1 ? "week" : "weeks"}`;
+  } else if (days >= 1) {
+    result = `${days} ${days === 1 ? "day" : "days"}`;
+  } else if (hours >= 1) {
+    result = `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  } else if (minutes >= 1) {
+    result = `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  } else {
+    result = "less than a minute";
+  }
+
+  // Add direction
+  return isPast ? "missed" : `${result}`;
 }

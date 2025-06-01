@@ -186,13 +186,11 @@ export default function TodayPage() {
                 setFilterStatus={setFilterStatus}
               />
               <Button
-                variant="secondary"
                 onClick={() => {
                   setNewTaskOpen(true);
                 }}
               >
-                <PlusIcon className="mr-2 h-4 w-4" />
-                New Task
+                Add Task
               </Button>
             </div>
           </div>

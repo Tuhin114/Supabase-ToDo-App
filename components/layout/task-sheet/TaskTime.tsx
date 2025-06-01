@@ -34,24 +34,12 @@ interface TimeProps {
 }
 
 export function TaskTimePicker({ defaultTime }: TimeProps) {
-  console.log("=== TaskTimePicker render ===");
-  console.log("defaultTime:", defaultTime);
-  console.log("defaultTime.timeEstimate:", defaultTime?.timeEstimate);
-
   const initialState = useMemo(() => {
     const result = initializeTimeState(defaultTime);
-    console.log("initializeTimeState result:", result);
-    console.log("result.timeEstimate:", result.timeEstimate);
     return result;
   }, [defaultTime]);
 
-  console.log("initialState after useMemo:", initialState);
-  console.log("initialState.timeEstimate:", initialState.timeEstimate);
-
   const [localState, setLocalState] = useState<LocalTimeState>(initialState);
-
-  console.log("localState after useState:", localState);
-  console.log("localState.timeEstimate:", localState.timeEstimate);
 
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
@@ -91,12 +79,8 @@ export function TaskTimePicker({ defaultTime }: TimeProps) {
 
   // Simple state update for non-time fields - REMOVE useCallback (not passed to children)
   function updateState(updates: Partial<LocalTimeState>) {
-    console.log("1. updateState called with:", updates);
-
     setLocalState((prev) => {
-      console.log("2. State updater running - prev:", prev);
       const newState = { ...prev, ...updates };
-      console.log("3. State updater - newState:", newState);
       return newState;
     });
 

@@ -22,7 +22,7 @@ export const CategoryBadge = ({ category }: CategoryBadgeProps) => {
         transition-all duration-200 hover:shadow-md transform hover:scale-105"
     >
       {/* {config.label} */}
-      work
+      {category.name}
     </span>
   );
 };

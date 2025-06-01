@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEFAULT_TIME_UNIT, DEFAULT_TIME_VALUE } from "../calendar";
 import { parseTime } from "../calendar/utils/time-utiles";
+import { DEFAULT_TIME_UNIT, DEFAULT_TIME_VALUE } from "@/constants/constants";
 
 interface TimeEstimatedProps {
   time: string;
@@ -32,26 +32,42 @@ export default function TimeEstimated({
 }: TimeEstimatedProps) {
   const [timeValue, setTimeValue] = useState<string>(DEFAULT_TIME_VALUE);
   const [timeUnit, setTimeUnit] = useState<TimeUnit>(DEFAULT_TIME_UNIT);
-
-  // console.log("time", time);
-  // console.log("timeValue", timeValue);
-  // console.log("timeUnit", timeUnit);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Sync local state with parsed time when prop changes
   useEffect(() => {
     const parsed = parseTime(time, min, max);
+
     setTimeValue(parsed.value);
     setTimeUnit(parsed.unit);
   }, [time, min, max]);
 
+  // Separate useEffect to handle initialization flag
+  useEffect(() => {
+    // Set initializing to false after the first render cycle completes
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [timeValue, timeUnit]); // Dependency on state values
+
   // Update time string
   function updateTime(newValue: string, newUnit: TimeUnit) {
+    if (isInitializing) {
+      return;
+    }
     const formattedTime = `${newValue} ${newUnit}`;
+
     setTime(formattedTime);
   }
 
   // Handle input value changes with validation
   function handleValueChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (isInitializing) {
+      return;
+    }
+
     const newValue = e.target.value;
 
     // Allow empty input for better UX during typing
@@ -77,6 +93,8 @@ export default function TimeEstimated({
 
   // Handle input blur to ensure valid value
   function handleValueBlur() {
+    if (isInitializing) return;
+
     if (timeValue === "" || isNaN(Number(timeValue))) {
       const fallbackValue = DEFAULT_TIME_VALUE;
       setTimeValue(fallbackValue);
@@ -86,6 +104,8 @@ export default function TimeEstimated({
 
   // Handle unit selection changes
   function handleUnitChange(value: TimeUnit) {
+    if (isInitializing) return;
+
     setTimeUnit(value);
     const currentValue = timeValue || DEFAULT_TIME_VALUE;
     updateTime(currentValue, value);

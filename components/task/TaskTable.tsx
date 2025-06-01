@@ -16,6 +16,8 @@ import React, { useState } from "react";
 import TaskSheet from "./TaskSheet";
 import { Button } from "../ui/button";
 import { ChevronRight } from "lucide-react";
+import { start } from "repl";
+import { getTimeLeft } from "../layout/calendar/utils/time-utiles";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -38,10 +40,16 @@ export const TaskTable = ({
     setEditTaskOpen(true);
   };
 
-  // const handleCloseEditTask = () => {
-  //   setEditTaskOpen(false);
-  //   setSelectedTask(null);
-  // };
+  const getTaskTimeLeft = (task: Task): string => {
+    const now = new Date();
+
+    // Use end time if available
+    if (task.time?.end) {
+      return getTimeLeft(now, new Date(task.time.end));
+    }
+
+    return "No deadline set";
+  };
 
   if (tasks.length === 0) {
     return (
@@ -114,10 +122,12 @@ export const TaskTable = ({
                   {timeEstimate ? (
                     <TimeBadge time={timeEstimate} />
                   ) : (
-                    <span className="text-muted">—</span>
+                    <span className="text-muted">1 hrs</span>
                   )}
                 </TableCell>
-                <TableCell>—</TableCell>
+                <TableCell>
+                  <span className="text-sm">{getTaskTimeLeft(task)}</span>
+                </TableCell>
                 <TableCell className="text-center">
                   {task.subtasks.length}
                 </TableCell>
@@ -142,6 +152,7 @@ export const TaskTable = ({
       {selectedTask && (
         <TaskSheet
           task={selectedTask}
+          startTime={selectedTask.time?.start}
           isOpen={editTaskOpen}
           setOpen={setEditTaskOpen}
           categories={[{ id: "1", name: "Category 1" }]}
