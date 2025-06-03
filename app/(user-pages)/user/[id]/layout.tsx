@@ -14,7 +14,7 @@ import {
 export default function UserLayout({ children }: { children: ReactNode }) {
   // gives you ['[id]', 'today'] or ['[id]', 'upcoming'], etc.
   const segments = useSelectedLayoutSegments() ?? "";
-  console.log("segments", segments);
+  // console.log("segments", segments);
   // turn e.g. "today" into "Today"
   const title = useMemo(() => {
     if (!segments) return "";

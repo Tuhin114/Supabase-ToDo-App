@@ -21,13 +21,19 @@ import { getTimeLeft } from "../layout/calendar/utils/time-utiles";
 
 interface TaskTableProps {
   tasks: Task[];
-  handleSaveTask: (formData: FormData) => Promise<{ error?: string }>;
-  handleDeleteTask: (taskId: string) => Promise<{ error?: string }>;
+  handleSaveTask?: (formData: FormData) => Promise<{ error?: string }>;
+  handleDeleteTask?: (taskId: string) => Promise<{ error?: string }>;
   handleToggleComplete: (taskId: string) => void;
+  createNewTask: (formData: FormData) => void;
+  updateExistingTask: (formData: FormData) => void;
+  deleteTask: (taskId: string) => void;
 }
 
 export const TaskTable = ({
   tasks,
+  createNewTask,
+  updateExistingTask,
+  deleteTask,
   handleSaveTask,
   handleDeleteTask,
   handleToggleComplete,
@@ -129,7 +135,7 @@ export const TaskTable = ({
                   <span className="text-sm">{getTaskTimeLeft(task)}</span>
                 </TableCell>
                 <TableCell className="text-center">
-                  {task.subtasks.length}
+                  {task.subtasks?.length || 0}
                 </TableCell>
                 <TableCell>
                   <Button
@@ -153,6 +159,9 @@ export const TaskTable = ({
         <TaskSheet
           task={selectedTask}
           startTime={selectedTask.time?.start}
+          createNewTask={createNewTask}
+          updateExistingTask={updateExistingTask}
+          deleteTask={deleteTask}
           isOpen={editTaskOpen}
           setOpen={setEditTaskOpen}
           categories={[{ id: "1", name: "Category 1" }]}

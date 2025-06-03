@@ -3,31 +3,42 @@
 import { DateRangePicker } from "@/components/layout/page/DateRangePicker";
 import { PriorityFilter } from "@/components/layout/page/PriorityFilter";
 import { StatusFilter } from "@/components/layout/page/StatusFilter";
-import TaskSheet, { FormState } from "@/components/task/TaskSheet";
+import TaskSheet from "@/components/task/TaskSheet";
 import { TaskTable } from "@/components/task/TaskTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { sampleTasks } from "@/constants/data";
-import {
-  Category,
-  Subtask,
-  Task,
-  TaskColor,
-  TaskPriority,
-  TaskStatus,
-  TaskTime,
-} from "@/types/Task";
-import { parseFormData } from "@/utils/utils";
-import { stat } from "fs";
-import { PlusIcon } from "lucide-react";
-import { parse } from "path";
-import { useState } from "react";
+import { useTasks } from "@/hooks/task/useTasks";
+
+import { Task, TaskTime } from "@/types/Task";
+
+import React, { useEffect, useMemo, useState } from "react";
 
 type TaskUpdateInput = FormData | { taskId: string; time: TaskTime };
 export function isFormData(input: TaskUpdateInput): input is FormData {
   return typeof FormData !== "undefined" && input instanceof FormData;
 }
-export default function TodayPage() {
+
+export type FormState = {
+  message?: string;
+  task?: Task;
+  isUpdate?: boolean;
+  error?: string;
+};
+
+export default function TodayPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = React.use(params);
+  const todayDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString();
+  }, []);
+
+  const { fetchTasks, createTask, updateTask, deleteTask } = useTasks(id);
+  const { data: allTasks, isLoading: allTasksLoading } = fetchTasks;
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
     to: Date | undefined;
@@ -37,98 +48,21 @@ export default function TodayPage() {
   });
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
+  const [tasks, setTasks] = useState<Task[]>(allTasks || []);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
 
-  const createNewTask = async (formData: FormData): Promise<FormState> => {
-    try {
-      const payload = parseFormData(formData);
-
-      const newTask: Task = {
-        id: crypto.randomUUID(),
-        title: payload.title,
-        description: payload.description,
-        status: payload.status as TaskStatus,
-        priority: payload.priority as TaskPriority,
-        time: payload.time,
-        category: payload.category as Category,
-        tags: payload.tags as string[],
-        subtasks: payload.subtasks as Subtask[],
-        color: payload.color as TaskColor,
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      setTasks((prev) => [newTask, ...prev]);
-      setNewTaskOpen(false);
-
-      return {
-        message: "Task created successfully.",
-        task: newTask,
-        isUpdate: false,
-      };
-    } catch (err: any) {
-      console.error("[Error in createNewTask]:", err);
-      return { error: "Failed to create task. Please try again." };
+  useEffect(() => {
+    if (allTasks) {
+      const filteredTasks = allTasks.filter((task) => {
+        if (task.time.end) {
+          const taskEndDate = task.time.end;
+          return taskEndDate >= todayDate;
+        }
+        return true;
+      });
+      setTasks(filteredTasks);
     }
-  };
-
-  const updateExistingTask = async (
-    input: TaskUpdateInput
-  ): Promise<FormState> => {
-    try {
-      let payload: any;
-
-      if (isFormData(input)) {
-        // Handle full form update
-        payload = parseFormData(input);
-      } else {
-        // Handle time-only update
-        payload = {
-          taskId: input.taskId,
-          time: input.time,
-        };
-      }
-
-      const taskId = payload.taskId as string;
-      const existingTask = tasks.find((t) => t.id === taskId);
-
-      if (!existingTask) {
-        return { error: "Task not found for update." };
-      }
-
-      const updatedTask: Task = {
-        ...existingTask,
-        ...(isFormData(input) && {
-          title: payload.title,
-          description: payload.description,
-          status: payload.status as Task["status"],
-          priority: payload.priority as Task["priority"],
-          category: payload.category as Category,
-          tags: payload.tags as string[],
-          subtasks: payload.subtasks as Subtask[],
-          color: payload.color as TaskColor,
-        }),
-        time: payload.time || existingTask.time,
-        updatedAt: new Date(),
-      };
-
-      setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)));
-      setNewTaskOpen(false);
-
-      return {
-        message: isFormData(input)
-          ? "Task updated successfully."
-          : "Task time updated.",
-        task: updatedTask,
-        isUpdate: true,
-      };
-    } catch (err: any) {
-      console.error("[Error in updateExistingTask]:", err);
-      return { error: "Failed to update task. Please try again." };
-    }
-  };
+  }, [allTasks]);
 
   const handleToggleComplete = (taskId: string) => {
     console.log("[Toggle Complete] Task ID:", taskId);
@@ -147,23 +81,6 @@ export default function TodayPage() {
         return t;
       })
     );
-  };
-
-  const handleSaveTask = async (formData: FormData): Promise<FormState> => {
-    const isUpdate = formData.has("taskId");
-    return isUpdate ? updateExistingTask(formData) : createNewTask(formData);
-  };
-
-  const handleDeleteTask = async (taskId: string): Promise<FormState> => {
-    try {
-      console.log("[Deleting Task] ID:", taskId);
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
-
-      return { message: "Task deleted successfully." };
-    } catch (err) {
-      console.error("[Error in handleDeleteTask]:", err);
-      return { error: "Failed to delete task. Please try again." };
-    }
   };
 
   return (
@@ -198,9 +115,10 @@ export default function TodayPage() {
         <CardContent>
           <TaskTable
             tasks={tasks}
-            handleSaveTask={handleSaveTask}
-            handleDeleteTask={handleDeleteTask}
             handleToggleComplete={handleToggleComplete}
+            createNewTask={createTask.mutate}
+            updateExistingTask={updateTask.mutate}
+            deleteTask={deleteTask.mutate}
           />
         </CardContent>
       </Card>
@@ -213,8 +131,9 @@ export default function TodayPage() {
           isOpen={newTaskOpen}
           setOpen={setNewTaskOpen}
           categories={[{ id: "1", name: "Category 1" }]}
-          onSave={handleSaveTask}
-          onDelete={handleDeleteTask}
+          createNewTask={createTask.mutate}
+          updateExistingTask={updateTask.mutate}
+          deleteTask={deleteTask.mutate}
         />
       )}
     </>

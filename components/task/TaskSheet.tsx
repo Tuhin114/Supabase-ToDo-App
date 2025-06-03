@@ -1,12 +1,4 @@
-import {
-  lazy,
-  useActionState,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { lazy, useCallback, useEffect, useMemo, useTransition } from "react";
 import { RiDeleteBinLine } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,15 +10,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { Task, Category, TaskTime, TaskColor } from "@/types/Task";
+import type { Task, Category, TaskTime } from "@/types/Task";
 
-// import { SubTasks } from "../layout/task-sheet-componets/SubTasks";
-// import TaskTags from "../layout/task-sheet-componets/TaskTags";
 import TaskCategory from "../layout/task-sheet/TaskCategory";
 import { TaskStatusPrioritySelects } from "../layout/task-sheet/TaskStsPrio";
 import { TaskColorPicker } from "../layout/task-sheet/TaskColor";
 import { TitleDescriptionFields } from "../layout/task-sheet/TaskTitleDesc";
-// import { TaskTimePicker } from "../layout/task-sheet-componets/TaskTime";
+// import { createNewTask, updateTask } from "@/actions/task/action";
+import { FormState } from "@/app/(user-pages)/user/[id]/(tasks)/today/page";
 
 const TaskTimePicker = lazy(() =>
   import("../layout/task-sheet/TaskTime").then((m) => ({
@@ -50,86 +41,51 @@ interface TaskSheetProps {
   task: Task | null;
   startTime: Date;
   isOpen: boolean;
+  createNewTask: (formData: FormData) => void;
+  updateExistingTask: (formData: FormData) => void;
+  deleteTask: (taskId: string) => void;
   setOpen: (open: boolean) => void;
-  onSave: (formData: FormData) => Promise<FormState>;
-  onDelete: (taskId: string) => Promise<FormState>;
+  onSave?: (formData: FormData) => Promise<FormState>;
+  onDelete?: (taskId: string) => Promise<FormState>;
   categories: Category[];
 }
 
-export interface FormState {
-  error?: string;
-  message?: string;
-  task?: Task;
-  isUpdate?: boolean;
-}
-
-const INITIAL_FORM_STATE: FormState = {};
-
-export function TaskSheet({
+export default function TaskSheet({
   task,
   startTime,
   isOpen,
+  createNewTask,
+  updateExistingTask,
+  deleteTask,
   setOpen,
   categories,
   onSave,
   onDelete,
 }: TaskSheetProps) {
   const [isPending, startTransition] = useTransition();
-  console.log(startTime);
+  const isEditing = Boolean(task?.id);
 
-  // Memoized save action to prevent unnecessary re-renders
-  const saveActionHandler = useCallback(
-    async (prevState: FormState, formData: FormData) => {
-      const result = await onSave(formData);
-      return result;
-    },
-    [onSave]
-  );
-
-  // Memoized delete action
-  const deleteActionHandler = useCallback(
-    async (prevState: FormState, taskId: string) => {
-      const result = await onDelete(taskId);
-      return result;
-    },
-    [onDelete]
-  );
-
-  const [saveState, saveAction, savePending] = useActionState<
-    FormState,
-    FormData
-  >(saveActionHandler, INITIAL_FORM_STATE);
-
-  const [deleteState, deleteAction, deletePending] = useActionState<
-    FormState,
-    string
-  >(deleteActionHandler, INITIAL_FORM_STATE);
-
-  // Memoized default values to prevent recalculation on every render
+  // Memoized default values
   const defaultValues = useMemo(() => {
     const getDefaultTime = (): TaskTime => {
       if (task?.time) return task.time;
 
       // Snap to 15-minute intervals
-      const minutes = startTime.getMinutes();
+      const snapTime = new Date(startTime);
+      const minutes = snapTime.getMinutes();
       const remainder = minutes % 15;
+
       if (remainder !== 0) {
-        if (remainder < 7.5) {
-          // Round down to nearest 15 min
-          startTime.setMinutes(minutes - remainder);
-        } else {
-          // Round up to nearest 15 min
-          startTime.setMinutes(minutes + (15 - remainder));
-        }
-        startTime.setSeconds(0);
-        startTime.setMilliseconds(0);
+        const adjustment = remainder < 7.5 ? -remainder : 15 - remainder;
+        snapTime.setMinutes(minutes + adjustment);
+        snapTime.setSeconds(0);
+        snapTime.setMilliseconds(0);
       }
 
-      const baseStart = startTime || new Date();
-      const oneHourLater = new Date(baseStart.getTime() + 60 * 60 * 1000);
+      const oneHourLater = new Date(snapTime.getTime() + 60 * 60 * 1000);
 
       return {
-        start: baseStart,
+        start: snapTime,
         end: oneHourLater,
         timeEstimate: "1 hr",
         allDay: false,
@@ -145,35 +101,44 @@ export function TaskSheet({
       category: task?.category,
       tags: task?.tags || [],
       subtasks: task?.subtasks || [],
-      color: (task?.color as TaskColor) || "sky",
-      createdAt: task?.createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      color: task?.color || "sky",
     };
   }, [task, startTime]);
 
-  // console.log("Default values:", defaultValues);
-
-  // Memoized form submission handler
-  const handleFormSubmit = useCallback(
-    (formData: FormData) => {
-      return saveAction(formData);
+  const handleSubmit = useCallback(
+    async (formData: FormData) => {
+      console.log("Form Data:", formData);
+      startTransition(() => {
+        try {
+          if (task?.id) {
+            formData.append("taskId", task.id);
+            updateExistingTask(formData);
+          } else {
+            createNewTask(formData);
+          }
+          setOpen(false);
+        } catch (error) {
+          console.error("Error submitting task:", error);
+          // Add toast or alert here if needed
+        }
+      });
     },
-    [saveAction]
+    [isEditing, task?.id, setOpen]
   );
 
-  // Memoized delete handler
-  const handleDelete = useCallback(() => {
-    if (task?.id) {
-      startTransition(() => {
-        deleteAction(task.id);
-      });
-    }
-  }, [task?.id, startTransition, deleteAction]);
+  const handleDelete = useCallback(async () => {
+    if (!task?.id) return;
 
-  // Memoized close handler
-  const handleClose = useCallback(() => setOpen(false), [setOpen]);
-
-  const isEditing = Boolean(task?.id);
+    startTransition(() => {
+      try {
+        deleteTask(task.id);
+        setOpen(false);
+      } catch (error) {
+        console.error("Failed to delete task:", error);
+        // Handle error - you can add toast notification here
+      }
+    });
+  }, [task?.id, onDelete, setOpen]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -187,68 +152,53 @@ export function TaskSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <form action={handleFormSubmit} className="grid gap-4 py-4">
-          {/* Hidden fields */}
-          {task?.id && <input type="hidden" name="taskId" value={task.id} />}
-          <input
-            type="hidden"
-            name="createdAt"
-            value={defaultValues.createdAt}
-          />
-          <input
-            type="hidden"
-            name="updatedAt"
-            value={defaultValues.updatedAt}
-          />
-
-          {/* Form fields */}
+        <form action={handleSubmit} className="grid gap-4 py-4">
           <TitleDescriptionFields
             defaultTitle={defaultValues.title}
             defaultDescription={defaultValues.description}
           />
+
           <TaskStatusPrioritySelects
             defaultStatus={defaultValues.status}
             defaultPriority={defaultValues.priority}
           />
 
           <TaskTimePicker defaultTime={defaultValues.time} />
+
           <TaskCategory
             categories={categories}
             defaultCategory={defaultValues.category}
           />
+
           <TaskTags defaultTags={defaultValues.tags} />
+
           <SubTasks defaultSubtasks={defaultValues.subtasks} />
+
           <TaskColorPicker defaultColor={defaultValues.color} />
 
           <SheetFooter className="flex-row sm:justify-between">
             {isEditing && (
-              <SheetClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleDelete}
-                  disabled={deletePending}
-                  aria-label="Delete task"
-                >
-                  <RiDeleteBinLine size={16} aria-hidden="true" />
-                </Button>
-              </SheetClose>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleDelete}
+                disabled={isPending}
+                aria-label="Delete task"
+              >
+                <RiDeleteBinLine size={16} aria-hidden="true" />
+              </Button>
             )}
 
             <div className="flex flex-1 justify-end gap-2">
               <SheetClose asChild>
-                <Button type="button" variant="outline" onClick={handleClose}>
+                <Button type="button" variant="outline">
                   Cancel
                 </Button>
               </SheetClose>
 
-              <Button
-                type="submit"
-                disabled={savePending}
-                onClick={handleClose}
-              >
-                {savePending ? "Saving..." : "Save"}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Saving..." : "Save"}
               </Button>
             </div>
           </SheetFooter>
@@ -257,5 +207,3 @@ export function TaskSheet({
     </Sheet>
   );
 }
-
-export default TaskSheet;

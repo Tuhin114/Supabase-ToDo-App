@@ -9,9 +9,7 @@ export interface Task {
   category: Category;
   subtasks: Subtask[];
   completed?: boolean;
-  color?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  color?: TaskColor;
 }
 
 export interface TaskTime {

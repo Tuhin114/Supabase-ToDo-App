@@ -14,8 +14,6 @@ interface ColorPickerProps {
 export function TaskColorPicker({ defaultColor }: ColorPickerProps) {
   const [color, setColor] = useState<TaskColor>(defaultColor || "sky");
 
-  console.log(color);
-
   return (
     <div className="space-y-1.5">
       <Label htmlFor="color">Color</Label>
@@ -38,6 +36,9 @@ export function TaskColorPicker({ defaultColor }: ColorPickerProps) {
           />
         ))}
       </RadioGroup>
+
+      {/* ✅ Hidden input to send to FormData */}
+      <input type="hidden" name="color" value={color} />
     </div>
   );
 }

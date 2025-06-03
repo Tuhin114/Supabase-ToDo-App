@@ -41,15 +41,15 @@ import { WeekView } from "../week-view";
 import { DayView } from "../day-view";
 import { AgendaView } from "../agenda-view";
 import { Task } from "@/types/Task";
-import TaskSheet, { FormState } from "../../../task/TaskSheet";
+import TaskSheet from "../../../task/TaskSheet";
 import { TaskUpdateInput } from "@/app/(user-pages)/user/[id]/(tasks)/calendar/page";
 import { CalendarView } from "@/types/Calender";
 
 export interface EventCalendarProps {
   events?: Task[];
-  onEventAdd: (formData: FormData) => Promise<FormState>;
-  onEventUpdate: (event: TaskUpdateInput) => Promise<FormState>;
-  onEventDelete: (eventId: string) => Promise<FormState>;
+  onEventAdd: (formData: FormData) => void;
+  onEventUpdate: (event: TaskUpdateInput) => void;
+  onEventDelete: (eventId: string) => void;
   className?: string;
   initialView?: CalendarView;
 }
@@ -148,11 +148,6 @@ export default function EventCalendar({
     setSelectedEvent(null);
     setStartTime(startTime);
     setIsEventDialogOpen(true);
-  };
-
-  const handleSaveTask = async (formData: FormData): Promise<FormState> => {
-    const isUpdate = formData.has("taskId");
-    return isUpdate ? onEventUpdate(formData) : onEventAdd(formData);
   };
 
   const handleEventUpdate = (updatedEvent: TaskUpdateInput) => {
@@ -338,24 +333,17 @@ export default function EventCalendar({
           )}
         </div>
 
-        {/* <EventDialog
-          event={selectedEvent}
-          isOpen={isEventDialogOpen}
-          onClose={() => {
-            setIsEventDialogOpen(false);
-            setSelectedEvent(null);
-          }}
-          onSave={handleEventSave}
-          onDelete={handleEventDelete}
-        /> */}
         <TaskSheet
           categories={[{ id: "1", name: "Category 1" }]}
           task={selectedEvent}
           startTime={startTime}
           isOpen={isEventDialogOpen}
           setOpen={setIsEventDialogOpen}
-          onSave={handleSaveTask}
-          onDelete={onEventDelete}
+          // onSave={handleSaveTask}
+          // onDelete={onEventDelete}
+          createNewTask={onEventAdd}
+          updateExistingTask={onEventUpdate}
+          deleteTask={onEventDelete}
         />
       </CalendarDndProvider>
     </div>
