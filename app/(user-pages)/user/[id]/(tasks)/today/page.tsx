@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useTasks } from "@/hooks/task/useTasks";
 
 import { Task, TaskTime } from "@/types/Task";
+import { set } from "date-fns";
 
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -37,7 +38,8 @@ export default function TodayPage({
     return today.toISOString();
   }, []);
 
-  const { fetchTasks, createTask, updateTask, deleteTask } = useTasks(id);
+  const { fetchTasks, createTask, updateTask, deleteTask, toggleComplete } =
+    useTasks(id);
   const { data: allTasks, isLoading: allTasksLoading } = fetchTasks;
   const [dateRange, setDateRange] = useState<{
     from: Date | undefined;
@@ -65,22 +67,7 @@ export default function TodayPage({
   }, [allTasks]);
 
   const handleToggleComplete = (taskId: string) => {
-    console.log("[Toggle Complete] Task ID:", taskId);
-    setTasks((prev) =>
-      prev.map((t) => {
-        if (t.id === taskId) {
-          console.log("[Toggling Task] Before:", t);
-          const updated = {
-            ...t,
-            completed: !t.completed,
-            updatedAt: new Date(),
-          };
-          console.log("[Toggling Task] After:", updated);
-          return updated;
-        }
-        return t;
-      })
-    );
+    toggleComplete.mutate(taskId);
   };
 
   return (

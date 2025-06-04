@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCategories } from "@/hooks/categories/useCategories";
 
 export interface Category {
   id: string;
@@ -24,21 +25,26 @@ export interface Category {
 }
 
 export interface TaskCategoryProps {
-  categories: Category[];
   defaultCategory?: Category | null;
 }
 
-export default function TaskCategory({
-  categories,
-  defaultCategory,
-}: TaskCategoryProps) {
+export default function TaskCategory({ defaultCategory }: TaskCategoryProps) {
+  const { fetchCategories, addCategory } = useCategories();
+
+  const { data: categories } = fetchCategories;
+
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [localCategories, setLocalCategories] =
-    useState<Category[]>(categories);
+  const [localCategories, setLocalCategories] = useState<Category[]>(
+    categories || []
+  );
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     defaultCategory || null
   );
+
+  useEffect(() => {
+    setLocalCategories(categories || []);
+  }, [categories]);
 
   const handleCategorySelect = (value: string) => {
     const selected = localCategories.find((c) => c.id === value);
@@ -47,7 +53,7 @@ export default function TaskCategory({
     }
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     const trimmedName = newCategoryName.trim();
     if (!trimmedName) return;
 
@@ -57,13 +63,13 @@ export default function TaskCategory({
 
     if (existing) {
       setSelectedCategory(existing);
-    } else {
-      const newCategory: Category = {
-        id: uuidv4(),
-        name: trimmedName,
-      };
+    }
+    try {
+      const newCategory = await addCategory(trimmedName);
       setLocalCategories((prev) => [...prev, newCategory]);
       setSelectedCategory(newCategory);
+    } catch (error) {
+      console.error("Failed to add category:", error);
     }
 
     setNewCategoryName("");
