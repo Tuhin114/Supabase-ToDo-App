@@ -8,6 +8,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
+import React, { useState } from "react";
 
 interface DateRangePickerProps {
   dateRange: { from: Date | undefined; to: Date | undefined };
@@ -21,6 +22,13 @@ export const DateRangePicker = ({
   dateRange,
   setDateRange,
 }: DateRangePickerProps) => {
+  // To keep the calendar “focused” on the appropriate month whenever
+  // dateRange.from changes, track a `controlledMonth` internally.
+  // Start with today (or whatever you’d like as a default).
+  const [controlledMonth, setControlledMonth] = useState<Date>(
+    dateRange.from ?? new Date()
+  );
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -29,7 +37,7 @@ export const DateRangePicker = ({
           {dateRange.from ? (
             dateRange.to ? (
               <>
-                {format(dateRange.from, "LLL dd, y")} -{" "}
+                {format(dateRange.from, "LLL dd, y")} –{" "}
                 {format(dateRange.to, "LLL dd, y")}
               </>
             ) : (
@@ -40,20 +48,35 @@ export const DateRangePicker = ({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 " align="start">
+
+      <PopoverContent className="w-auto p-0" align="start">
         <CalendarComponent
-          initialFocus
+          // — Make it controlled:
           mode="range"
-          defaultMonth={dateRange.from}
-          selected={dateRange as DateRange}
+          selected={
+            // React-Day-Picker expects a DateRange of shape { from?: Date; to?: Date }
+            {
+              from: dateRange.from ?? undefined,
+              to: dateRange.to ?? undefined,
+            }
+          }
           onSelect={(range: DateRange | undefined) => {
+            // 1) Update parent state
             setDateRange({
               from: range?.from,
               to: range?.to,
             });
+            // 2) If they just picked a “from” date, focus the month on that
+            if (range?.from) {
+              setControlledMonth(range.from);
+            }
+          }}
+          // Instead of defaultMonth, use `month={controlledMonth}`
+          month={controlledMonth}
+          onMonthChange={(newMonth: Date) => {
+            setControlledMonth(newMonth);
           }}
           numberOfMonths={2}
-          className=""
         />
       </PopoverContent>
     </Popover>

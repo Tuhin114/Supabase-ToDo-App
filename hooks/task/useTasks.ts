@@ -67,11 +67,32 @@ export function useTasks(userId: string) {
 
       // Snapshot previous value
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks", userId]);
+      console.log("previousTasks", previousTasks);
 
       // Optimistically update the task's time
-      queryClient.setQueryData<Task[]>(["tasks", userId], (old) =>
-        old?.map((task) => (task.id === taskId ? { ...task, time } : task))
+      queryClient.setQueryData<Task[]>(["tasks", userId], (old = []) =>
+        old.map((task) => {
+          if (task.id !== taskId) {
+            return task;
+          }
+          // Build the optimistic “server” shape, exactly like Supabase would:
+          const optimisticTime = {
+            start: time.start.toISOString(),
+            end: time.end.toISOString(),
+          };
+
+          return {
+            ...task,
+            time: {
+              ...task.time, // preserve existing time properties including timeEstimate
+              start: new Date(optimisticTime.start),
+              end: new Date(optimisticTime.end),
+            },
+          };
+        })
       );
+
+      console.log("newTasks", queryClient.getQueryData(["tasks", userId]));
 
       // Return snapshot for rollback
       return { previousTasks };
