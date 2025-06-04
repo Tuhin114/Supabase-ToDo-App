@@ -8,16 +8,13 @@ import { TaskTable } from "@/components/task/TaskTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useTasks } from "@/hooks/task/useTasks";
+import { getUserDetails } from "@/hooks/user/getUserDetails";
 
 import React, { useMemo, useState } from "react";
 
-export default function TodayPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
-
+export default function TodayPage() {
+  const { getId } = getUserDetails();
+  const { data: userId } = getId;
   // Keep an ISO-string for “today at midnight” to compare against task.time.end
   const todayDateISO = useMemo(() => {
     const today = new Date();
@@ -34,7 +31,7 @@ export default function TodayPage({
 
   // Hooks from useTasks
   const { fetchTasks, createTask, updateTask, deleteTask, toggleComplete } =
-    useTasks(id);
+    useTasks(userId || "");
   const { data: allTasks, isLoading: allTasksLoading } = fetchTasks;
 
   // 1) DATE RANGE filter (“from” & “to” are plain Date or undefined)

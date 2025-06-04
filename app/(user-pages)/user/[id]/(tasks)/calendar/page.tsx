@@ -13,6 +13,7 @@ import {
 } from "@/types/Task";
 import { sampleTasks } from "@/constants/data";
 import { useTasks } from "@/hooks/task/useTasks";
+import { getUserDetails } from "@/hooks/user/getUserDetails";
 
 // Sample tasks data with hardcoded times
 const sampletasks: Task[] = sampleTasks;
@@ -21,13 +22,12 @@ export function isFormData(input: TaskUpdateInput): input is FormData {
   return typeof FormData !== "undefined" && input instanceof FormData;
 }
 
-export default function CalendarPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
-  const { fetchTasks, createTask, updateTask, deleteTask } = useTasks(id);
+export default function CalendarPage() {
+  const { getId } = getUserDetails();
+  const { data: userId } = getId;
+  const { fetchTasks, createTask, updateTask, deleteTask } = useTasks(
+    userId || ""
+  );
   const { data: allTasks } = fetchTasks;
   const [tasks, setTasks] = useState<Task[]>(allTasks || []);
 
