@@ -163,7 +163,6 @@ export default function TodayPage() {
           startTime={new Date()}
           isOpen={newTaskOpen}
           setOpen={setNewTaskOpen}
-          categories={[{ id: "1", name: "Category 1" }]}
           createNewTask={createTask.mutate}
           updateExistingTask={updateTask.mutate}
           deleteTask={deleteTask.mutate}

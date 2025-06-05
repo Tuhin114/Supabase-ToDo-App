@@ -17,7 +17,6 @@ import { TaskStatusPrioritySelects } from "../layout/task-sheet/TaskStsPrio";
 import { TaskColorPicker } from "../layout/task-sheet/TaskColor";
 import { TitleDescriptionFields } from "../layout/task-sheet/TaskTitleDesc";
 // import { createNewTask, updateTask } from "@/actions/task/action";
-import { FormState } from "@/app/(user-pages)/user/[id]/(tasks)/today/page";
 
 const TaskTimePicker = lazy(() =>
   import("../layout/task-sheet/TaskTime").then((m) => ({
@@ -45,9 +44,6 @@ interface TaskSheetProps {
   updateExistingTask: (formData: FormData) => void;
   deleteTask: (taskId: string) => void;
   setOpen: (open: boolean) => void;
-  onSave?: (formData: FormData) => Promise<FormState>;
-  onDelete?: (taskId: string) => Promise<FormState>;
-  categories: Category[];
 }
 
 export default function TaskSheet({
@@ -58,9 +54,6 @@ export default function TaskSheet({
   updateExistingTask,
   deleteTask,
   setOpen,
-  categories,
-  onSave,
-  onDelete,
 }: TaskSheetProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = Boolean(task?.id);
@@ -138,7 +131,7 @@ export default function TaskSheet({
         // Handle error - you can add toast notification here
       }
     });
-  }, [task?.id, onDelete, setOpen]);
+  }, [task?.id, setOpen]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -165,10 +158,7 @@ export default function TaskSheet({
 
           <TaskTimePicker defaultTime={defaultValues.time} />
 
-          <TaskCategory
-            categories={categories}
-            defaultCategory={defaultValues.category}
-          />
+          <TaskCategory defaultCategory={defaultValues.category} />
 
           <TaskTags defaultTags={defaultValues.tags} />
 

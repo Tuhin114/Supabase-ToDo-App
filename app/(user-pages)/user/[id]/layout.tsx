@@ -10,11 +10,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { getUserDetails } from "@/hooks/user/getUserDetails";
 
 export default function UserLayout({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments() ?? [];
-
   const title = useMemo(() => {
     if (!segments || segments.length < 2) return "";
     return segments[1].charAt(0).toUpperCase() + segments[1].slice(1);
@@ -35,10 +33,10 @@ export default function UserLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <Separator
+          {/* <Separator
             orientation="horizontal"
             className="bg-sidebar-border h-px w-auto"
-          />
+          /> */}
 
           <main className="flex-1 overflow-auto">{children}</main>
         </SidebarInset>

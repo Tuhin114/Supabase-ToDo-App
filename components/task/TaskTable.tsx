@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "../layout/task-badges/StatusBadge";
-import { Task } from "@/types/Task";
+import { Task, TaskTime } from "@/types/Task";
 import { PriorityBadge } from "../layout/task-badges/PriorityBadge";
 import { CategoryBadge } from "../layout/task-badges/CategoryBadge";
 import { TimeBadge } from "../layout/task-badges/TimeBadge";
@@ -16,13 +16,13 @@ import React, { useState } from "react";
 import TaskSheet from "./TaskSheet";
 import { Button } from "../ui/button";
 import { ChevronRight } from "lucide-react";
-import { start } from "repl";
 import { getTimeLeft } from "../layout/calendar/utils/time-utiles";
+import { getTimeSpan } from "@/utils/utils";
 
 interface TaskTableProps {
   tasks: Task[];
-  handleSaveTask?: (formData: FormData) => Promise<{ error?: string }>;
-  handleDeleteTask?: (taskId: string) => Promise<{ error?: string }>;
+  source?: string;
+  timeTab?: string;
   handleToggleComplete: (taskId: string) => void;
   createNewTask: (formData: FormData) => void;
   updateExistingTask: (formData: FormData) => void;
@@ -31,11 +31,11 @@ interface TaskTableProps {
 
 export const TaskTable = ({
   tasks,
+  source,
+  timeTab,
   createNewTask,
   updateExistingTask,
   deleteTask,
-  handleSaveTask,
-  handleDeleteTask,
   handleToggleComplete,
 }: TaskTableProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -55,6 +55,10 @@ export const TaskTable = ({
     }
 
     return "No deadline set";
+  };
+
+  const getTaskTimeSpan = (time: TaskTime, tab: string) => {
+    return getTimeSpan(time, tab);
   };
 
   if (tasks.length === 0) {
@@ -80,7 +84,11 @@ export const TaskTable = ({
             <TableHead>Priority</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Time Estimate</TableHead>
-            <TableHead>Time Left</TableHead>
+            {source === "upcoming" ? (
+              <TableHead>Time Span</TableHead>
+            ) : (
+              <TableHead>Time Left</TableHead>
+            )}
             <TableHead>Subtasks</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
@@ -131,9 +139,17 @@ export const TaskTable = ({
                     <span className="text-muted">1 hrs</span>
                   )}
                 </TableCell>
-                <TableCell>
-                  <span className="text-sm">{getTaskTimeLeft(task)}</span>
-                </TableCell>
+                {source === "upcoming" ? (
+                  <TableCell>
+                    <span className="text-sm text-center">
+                      {getTaskTimeSpan(task.time, timeTab as string)}
+                    </span>
+                  </TableCell>
+                ) : (
+                  <TableCell>
+                    <span className="text-sm">{getTaskTimeLeft(task)}</span>
+                  </TableCell>
+                )}
                 <TableCell className="text-center">
                   {task.subtasks?.length || 0}
                 </TableCell>
@@ -164,9 +180,6 @@ export const TaskTable = ({
           deleteTask={deleteTask}
           isOpen={editTaskOpen}
           setOpen={setEditTaskOpen}
-          categories={[{ id: "1", name: "Category 1" }]}
-          onSave={handleSaveTask}
-          onDelete={handleDeleteTask}
         />
       )}
     </div>
