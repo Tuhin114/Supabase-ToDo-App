@@ -70,10 +70,6 @@ export default function TodayPage() {
 
       //  1) DATE RANGE LOGIC
       if (dateRange.from && dateRange.to) {
-        console.log("dateRange.from", dateRange.from);
-        console.log("dateRange.to", dateRange.to);
-        console.log("taskEnd", taskEnd);
-        console.log("taskStart", taskStart);
         // If both “from” and “to” are chosen, only include tasks whose end date
         // is between (inclusive) dateRange.from … dateRange.to.
         if (taskEnd < dateRange.from || taskStart > dateRange.to) {
@@ -148,6 +144,7 @@ export default function TodayPage() {
         <CardContent>
           {/* Pass only the filteredTasks down to TaskTable */}
           <TaskTable
+            source="today"
             tasks={filteredTasks}
             handleToggleComplete={handleToggleComplete}
             createNewTask={createTask.mutate}

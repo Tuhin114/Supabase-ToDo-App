@@ -40,6 +40,7 @@ interface TaskSheetProps {
   task: Task | null;
   startTime: Date;
   isOpen: boolean;
+  category?: Category | null;
   createNewTask: (formData: FormData) => void;
   updateExistingTask: (formData: FormData) => void;
   deleteTask: (taskId: string) => void;
@@ -50,10 +51,11 @@ export default function TaskSheet({
   task,
   startTime,
   isOpen,
+  setOpen,
+  category,
   createNewTask,
   updateExistingTask,
   deleteTask,
-  setOpen,
 }: TaskSheetProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = Boolean(task?.id);
@@ -91,7 +93,7 @@ export default function TaskSheet({
       status: task?.status || "todo",
       priority: task?.priority || "moderate",
       time: task?.time || getDefaultTime(),
-      category: task?.category,
+      category: task?.category || category,
       tags: task?.tags || [],
       subtasks: task?.subtasks || [],
       color: task?.color || "sky",

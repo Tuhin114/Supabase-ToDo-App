@@ -85,6 +85,7 @@ export async function createNewTask(formData: FormData) {
     if (newTask.subtasks.length > 0) {
       const subtaskInserts = newTask.subtasks.map((sub) => ({
         task_id: taskId,
+        category_id,
         title: sub.title,
         completed: sub.completed,
       }));
@@ -202,6 +203,7 @@ export async function updateTask(input: TaskUpdateInput) {
       if (payload.subtasks.length > 0) {
         const subtaskInserts = payload.subtasks.map((sub: Subtask) => ({
           task_id: taskId,
+          category_id,
           title: sub.title,
           completed: sub.completed,
         }));
@@ -239,6 +241,12 @@ export async function deleteTask(taskId: string) {
       .delete()
       .eq("id", taskId)
       .eq("user_id", user_id);
+
+    // Delete subtasks if exists
+    const { error: subError } = await supabase
+      .from("subtasks")
+      .delete()
+      .eq("task_id", taskId);
 
     if (deleteError) throw new Error(deleteError.message);
 

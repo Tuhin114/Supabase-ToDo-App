@@ -56,7 +56,7 @@ export function NavTasks({
         {tasks.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <Link href={`/user/${user.id}/${item.url}`}>
+              <Link href={item.url}>
                 <item.icon />
                 <span>{item.name}</span>
               </Link>

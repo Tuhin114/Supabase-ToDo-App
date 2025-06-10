@@ -91,7 +91,11 @@ export default function UpcomingPage() {
         <CardHeader className="flex">
           <div className="flex items-center justify-between w-full gap-2">
             {/* 1) Time‐range tabs */}
-            <TimingFilter value={activeRange} onChange={setActiveRange} />
+            <TimingFilter
+              source="upcoming"
+              value={activeRange}
+              onChange={setActiveRange}
+            />
 
             {/* 2) CustomizedFilter + TaskSearch + Add Task */}
             <div className="flex items-center gap-2">
@@ -109,7 +113,6 @@ export default function UpcomingPage() {
               />
 
               <TaskSearch onSearch={(q) => setSearchQuery(q)} />
-
               <Button onClick={() => setNewTaskOpen(true)}>Add Task</Button>
             </div>
           </div>

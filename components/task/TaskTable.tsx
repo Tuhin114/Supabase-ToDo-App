@@ -18,6 +18,9 @@ import { Button } from "../ui/button";
 import { ChevronRight } from "lucide-react";
 import { getTimeLeft } from "../layout/calendar/utils/time-utiles";
 import { getTimeSpan } from "@/utils/utils";
+import SubTask from "../layout/task-badges/SubTask";
+import TagBadges from "../layout/task-badges/TagBadges";
+import { formatDate } from "date-fns";
 
 interface TaskTableProps {
   tasks: Task[];
@@ -57,6 +60,19 @@ export const TaskTable = ({
     return "No deadline set";
   };
 
+  let colorPrimary = false;
+
+  const getTaskEndDate = (taskEndTime: Date | null) => {
+    if (taskEndTime) {
+      const isToday = new Date() === taskEndTime;
+      if (isToday) {
+        colorPrimary = true;
+      }
+      return formatDate(taskEndTime, "MMM dd, yyyy");
+    }
+    return "";
+  };
+
   const getTaskTimeSpan = (time: TaskTime, tab: string) => {
     return getTimeSpan(time, tab);
   };
@@ -82,26 +98,23 @@ export const TaskTable = ({
             <TableHead>Task</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Priority</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Time Estimate</TableHead>
-            {source === "upcoming" ? (
-              <TableHead>Time Span</TableHead>
+            {source === "categories" ? (
+              <TableHead>Due Date</TableHead>
             ) : (
-              <TableHead>Time Left</TableHead>
+              <TableHead>Category</TableHead>
             )}
+
+            <TableHead>Time Estimate</TableHead>
+            {source === "today" && <TableHead>Time Left</TableHead>}
+            {source === "upcoming" && <TableHead>Time Span</TableHead>}
             <TableHead>Subtasks</TableHead>
+            {source === "categories" && <TableHead>Tags</TableHead>}
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {tasks.map((task, index) => {
             const timeEstimate = task.time?.timeEstimate;
-            if (!task.time) {
-              console.warn(`[Task ${index}] Missing 'time' field`, task);
-            } else if (!timeEstimate) {
-              console.warn(`[Task ${index}] Missing 'timeEstimate'`, task.time);
-            }
-
             return (
               <TableRow
                 key={task.id}
@@ -129,9 +142,20 @@ export const TaskTable = ({
                 <TableCell>
                   <PriorityBadge priority={task.priority} />
                 </TableCell>
-                <TableCell>
-                  <CategoryBadge category={task.category} />
-                </TableCell>
+                {source === "categories" && (
+                  <TableCell>
+                    <span
+                      className={`text-sm ${colorPrimary && "text-primary"}`}
+                    >
+                      {getTaskEndDate(task.time?.end)}
+                    </span>
+                  </TableCell>
+                )}
+                {source !== "categories" && (
+                  <TableCell>
+                    <CategoryBadge category={task.category} />
+                  </TableCell>
+                )}
                 <TableCell>
                   {timeEstimate ? (
                     <TimeBadge time={timeEstimate} />
@@ -139,20 +163,27 @@ export const TaskTable = ({
                     <span className="text-muted">1 hrs</span>
                   )}
                 </TableCell>
-                {source === "upcoming" ? (
+                {source === "upcoming" && (
                   <TableCell>
                     <span className="text-sm text-center">
                       {getTaskTimeSpan(task.time, timeTab as string)}
                     </span>
                   </TableCell>
-                ) : (
+                )}
+                {source === "today" && (
                   <TableCell>
                     <span className="text-sm">{getTaskTimeLeft(task)}</span>
                   </TableCell>
                 )}
-                <TableCell className="text-center">
-                  {task.subtasks?.length || 0}
+
+                <TableCell>
+                  <SubTask subtask={task.subtasks} />
                 </TableCell>
+                {source === "categories" && (
+                  <TableCell>
+                    <TagBadges tags={task.tags} />
+                  </TableCell>
+                )}
                 <TableCell>
                   <Button
                     variant="ghost"

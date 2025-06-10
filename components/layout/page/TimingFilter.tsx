@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,13 +11,23 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TimingFilterProps {
+  source: string;
   value: string;
   onChange: (value: string) => void;
 }
 
-const timeRanges = ["tomorrow", "this-week", "this-month", "this-year"];
+const allTimeRanges = ["tomorrow", "this-week", "this-month", "this-year"];
 
-export default function TimingFilter({ value, onChange }: TimingFilterProps) {
+export default function TimingFilter({
+  source,
+  value,
+  onChange,
+}: TimingFilterProps) {
+  const timeRanges =
+    source === "categories"
+      ? allTimeRanges.filter((range) => range !== "tomorrow")
+      : allTimeRanges;
+
   return (
     <div className="flex flex-col gap-4 ml- sm:flex-row sm:items-center sm:justify-between">
       {/* Mobile View Select */}
@@ -59,12 +68,6 @@ export default function TimingFilter({ value, onChange }: TimingFilterProps) {
                 .replace("this-", "This ")
                 .replace("tomorrow", "Tomorrow")
                 .replace("-", " ")}
-              {/* <Badge
-                variant="secondary"
-                className="min-w-[20px] px-1.5 h-5 ml-1 flex items-center justify-center rounded-full bg-muted-foreground/30 text-xs font-medium"
-              >
-                {taskCounts[range] ?? 0}
-              </Badge> */}
             </TabsTrigger>
           ))}
         </TabsList>

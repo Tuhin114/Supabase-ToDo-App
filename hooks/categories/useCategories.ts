@@ -1,69 +1,78 @@
-// export const useCategories = () => {
-//   const fetchCategories = useQuery({
-//     queryKey: ["categories"],
-//     queryFn: async () => {
-//       const res = await fetch("/task/category");
-//       if (!res.ok) throw new Error("Failed to fetch categories");
-//       return res.json();
-//     },
-//     enabled: true,
-//   });
-
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
-//   return fetchCategories;
-// };
+import { Category } from "@/types/Task";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 export function useCategories() {
   const queryClient = useQueryClient();
 
-  // Fetch all the categories
-  const fetchCategories = useQuery({
+  // GET categories
+  const fetchCategories = useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
       const res = await fetch("/task/category");
       if (!res.ok) throw new Error("Failed to fetch categories");
-      const categories = await res.json();
-      queryClient.setQueryData(["categories"], categories);
-      return categories;
+      return res.json();
     },
-    enabled: true,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 2,
   });
 
-  // Add new category
-  const addCategory = async (name: string) => {
-    const res = await fetch("/task/category", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name }),
-    });
-    if (!res.ok) throw new Error("Failed to add category");
-    return res.json();
+  // GET category name by id
+  const getCategoryNameById = (id: string): string => {
+    const cached = queryClient.getQueryData<Category[]>(["categories"]);
+    return cached?.find((c) => c.id === id)?.name ?? "";
   };
 
-  // Update category
-  const updateCategory = async (id: string, name: string) => {
-    const res = await fetch(`/task/category/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name }),
-    });
-    if (!res.ok) throw new Error("Failed to update category");
-    return res.json();
-  };
+  // ADD category (optional for completeness)
+  const addCategory = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await fetch("/task/category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error("Failed to add category");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
 
-  // Delete category
-  const deleteCategory = async (id: string) => {
-    const res = await fetch(`/task/category/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error("Failed to delete category");
-    return res.json();
-  };
+  // UPDATE category
+  const updateCategory = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const res = await fetch(`/api/category/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error("Failed to update category");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
 
-  return { fetchCategories, addCategory, updateCategory, deleteCategory };
+  // DELETE category
+  const deleteCategory = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/category/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete category");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+
+  return {
+    fetchCategories,
+    getCategoryNameById,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+  };
 }

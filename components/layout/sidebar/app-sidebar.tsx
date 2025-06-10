@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  BookOpen,
   Bot,
   CalendarDays,
   ChevronsRight,
@@ -10,18 +9,17 @@ import {
   Frame,
   LifeBuoy,
   ListTodo,
-  Map,
-  PieChart,
   Send,
-  Settings2,
   SquareTerminal,
   StickyNote,
 } from "lucide-react";
+import Link from "next/link";
 
 import { NavLabels } from "@/components/layout/sidebar/nav-labels";
 import { NavTasks } from "@/components/layout/sidebar/nav-tasks";
 import { NavSecondary } from "@/components/layout/sidebar/nav-secondary";
 import { NavUser } from "@/components/layout/sidebar/nav-user";
+
 import {
   Sidebar,
   SidebarContent,
@@ -32,166 +30,88 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { getUserDetails } from "@/hooks/user/getUserDetails";
+import { useCategories } from "@/hooks/categories/useCategories";
+import { Category } from "@/types/Task";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  labels: [
-    {
-      title: "Priority",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "High",
-          url: "#",
-        },
-        {
-          title: "Moderate",
-          url: "#",
-        },
-        {
-          title: "Low",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Status",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Done",
-          url: "#",
-        },
-        {
-          title: "In Progress",
-          url: "#",
-        },
-        {
-          title: "In Review",
-          url: "#",
-        },
-        {
-          title: "On Hold",
-          url: "#",
-        },
-        {
-          title: "To Do",
-          url: "#",
-        },
-        {
-          title: "Waiting",
-          url: "#",
-        },
-        {
-          title: "Stuck",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Tags",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Design",
-          url: "#",
-        },
-        {
-          title: "Development",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Lists",
-      url: "#",
-      icon: Frame,
-      items: [
-        {
-          title: "Work",
-          url: "#",
-        },
-        {
-          title: "Personal",
-          url: "#",
-        },
-        {
-          title: "Projects",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: Send,
-    },
-  ],
-  tasks: [
-    {
-      name: "Upcoming",
-      url: "upcoming",
-      icon: ChevronsRight,
-    },
-    {
-      name: "Today",
-      url: "today",
-      icon: ListTodo,
-    },
-    {
-      name: "Calendar",
-      url: "calendar",
-      icon: CalendarDays,
-    },
-    {
-      name: "Sticky Wall",
-      url: "#",
-      icon: StickyNote,
-    },
-  ],
-  lists: [
-    {
-      name: "Work",
-      url: "#",
-    },
-    {
-      name: "Personal",
-      url: "#",
-    },
-    {
-      name: "Projects",
-      url: "#",
-    },
-  ],
-};
+function AppSidebarComponent(props: React.ComponentProps<typeof Sidebar>) {
+  const { getId } = getUserDetails();
+  const userId = getId.data;
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { fetchCategories } = useCategories();
+  const { data: categories } = fetchCategories;
+
+  const dynamicCategories = React.useMemo(() => {
+    return (
+      categories?.map((category: Category) => ({
+        title: category.name,
+        url: `/user/${userId}/categories/${category.id}`,
+      })) ?? []
+    );
+  }, [categories, userId]);
+
+  const data = {
+    user: {
+      name: "shadcn",
+      email: "m@example.com",
+      avatar: "/avatars/shadcn.jpg",
+    },
+    labels: [
+      {
+        title: "Priority",
+        url: "#",
+        icon: SquareTerminal,
+        isActive: true,
+        items: [
+          { title: "High", url: "#" },
+          { title: "Moderate", url: "#" },
+          { title: "Low", url: "#" },
+        ],
+      },
+      {
+        title: "Status",
+        url: "#",
+        icon: Bot,
+        items: [
+          { title: "Done", url: "#" },
+          { title: "In Progress", url: "#" },
+          { title: "In Review", url: "#" },
+          { title: "On Hold", url: "#" },
+          { title: "To Do", url: "#" },
+          { title: "Waiting", url: "#" },
+          { title: "Stuck", url: "#" },
+        ],
+      },
+      {
+        title: "Categories",
+        url: "#",
+        icon: Frame,
+        items: dynamicCategories,
+      },
+    ],
+    navSecondary: [
+      { title: "Support", url: "#", icon: LifeBuoy },
+      { title: "Feedback", url: "#", icon: Send },
+    ],
+    tasks: [
+      {
+        name: "Upcoming",
+        url: `/user/${userId}/upcoming`,
+        icon: ChevronsRight,
+      },
+      { name: "Today", url: `/user/${userId}/today`, icon: ListTodo },
+      { name: "Calendar", url: `/user/${userId}/calendar`, icon: CalendarDays },
+      { name: "Sticky Wall", url: "#", icon: StickyNote },
+    ],
+  };
+
   return (
     <Sidebar variant="inset" {...props} className="border-r bg-secondary">
       <SidebarHeader className="bg-secondary">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
@@ -199,7 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="truncate font-semibold">ToDo App</span>
                   <span className="truncate text-xs">Supabase</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -207,7 +127,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="bg-secondary scroll-smooth">
         <NavTasks tasks={data.tasks} />
         <NavLabels items={data.labels} />
-
         <NavSecondary items={data.navSecondary} className="mt-auto" />
         <ThemeSwitcher />
       </SidebarContent>
@@ -217,3 +136,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   );
 }
+
+// Only re-render sidebar if props actually change
+export const AppSidebar = React.memo(AppSidebarComponent);

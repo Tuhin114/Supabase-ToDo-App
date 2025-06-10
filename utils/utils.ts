@@ -25,6 +25,7 @@ import {
   isWithinInterval,
   parseISO,
   getWeekOfMonth,
+  subMonths,
 } from "date-fns";
 import { redirect } from "next/navigation";
 
@@ -191,4 +192,85 @@ export function getTimeSpan(time: TaskTime, tab: string): string {
 
   // If none of the above, return empty
   return "";
+}
+
+export function getRanges(range: string) {
+  const now = new Date();
+  if (range === "week") {
+    const start = startOfWeek(now, { weekStartsOn: 1 });
+    return Array.from({ length: 7 }).map((_, i) => ({
+      start: startOfDay(addDays(start, i)),
+      end: endOfDay(addDays(start, i)),
+      label: format(addDays(start, i), "MMM d"),
+    }));
+  }
+  if (range === "month") {
+    const start = startOfMonth(now);
+    // 4 weeks
+    return Array.from({ length: 4 }).map((_, i) => {
+      const wkStart = startOfWeek(addDays(start, i * 7), { weekStartsOn: 1 });
+      const wkEnd = endOfDay(addDays(wkStart, 6));
+      return {
+        start: wkStart,
+        end: wkEnd,
+        label: `W${i + 1}`,
+      };
+    });
+  }
+  if (range === "year") {
+    const res: any[] = [];
+    for (let m = 0; m < 12; m++) {
+      const d = subMonths(now, 11 - m);
+      res.push({
+        start: startOfMonth(d),
+        end: endOfMonth(d),
+        label: format(d, "MMM"),
+      });
+    }
+    return res;
+  }
+  // default: entire span
+  return [];
+}
+
+export function parseTimeEstimateToHours(input: string): number {
+  if (!input) return 0;
+
+  // Extract value and unit (e.g., "2 days" -> value=2, unit="days")
+  const match = input
+    .trim()
+    .toLowerCase()
+    .match(/^([\d.]+)\s*(mins?|hours?|hrs?|days?|weeks?|months?|yrs?|years?)$/);
+
+  if (!match) return 0;
+
+  const value = parseFloat(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case "min":
+    case "mins":
+      return value / 60;
+    case "hr":
+    case "hrs":
+    case "hour":
+    case "hours":
+      return value;
+    case "day":
+    case "days":
+      return value * 24;
+    case "week":
+    case "weeks":
+      return value * 24 * 7;
+    case "month":
+    case "months":
+      return value * 24 * 30;
+    case "yr":
+    case "yrs":
+    case "year":
+    case "years":
+      return value * 24 * 365;
+    default:
+      return 0;
+  }
 }

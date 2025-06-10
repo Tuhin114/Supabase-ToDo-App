@@ -6,7 +6,20 @@ import { Task, TaskTime } from "@/types/Task";
 
 const getSupabase = () => createClient();
 
-export function useTasks(userId: string) {
+function mapRange(range: string): "week" | "month" | "year" {
+  switch (range) {
+    case "this-week":
+      return "week";
+    case "this-month":
+      return "month";
+    case "this-year":
+      return "year";
+    default:
+      return "week";
+  }
+}
+
+export function useTasks(userId: string, categoryId?: string, range?: string) {
   const queryClient = useQueryClient();
 
   // Fetch all tasks for a user
@@ -51,6 +64,12 @@ export function useTasks(userId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      if (categoryId && range) {
+        const apiRange = mapRange(range);
+        queryClient.invalidateQueries({
+          queryKey: ["categoryMetrics", categoryId, apiRange],
+        });
+      }
     },
   });
 
@@ -67,7 +86,6 @@ export function useTasks(userId: string) {
 
       // Snapshot previous value
       const previousTasks = queryClient.getQueryData<Task[]>(["tasks", userId]);
-      console.log("previousTasks", previousTasks);
 
       // Optimistically update the task's time
       queryClient.setQueryData<Task[]>(["tasks", userId], (old = []) =>
@@ -92,10 +110,19 @@ export function useTasks(userId: string) {
         })
       );
 
-      console.log("newTasks", queryClient.getQueryData(["tasks", userId]));
-
       // Return snapshot for rollback
       return { previousTasks };
+    },
+
+    // Always refetch after error or success
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      if (categoryId && range) {
+        const apiRange = mapRange(range);
+        queryClient.invalidateQueries({
+          queryKey: ["categoryMetrics", categoryId, apiRange],
+        });
+      }
     },
 
     // Rollback if there's an error
@@ -116,6 +143,12 @@ export function useTasks(userId: string) {
     mutationFn: async (id: string) => await deleteTask(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      if (categoryId && range) {
+        const apiRange = mapRange(range);
+        queryClient.invalidateQueries({
+          queryKey: ["categoryMetrics", categoryId, apiRange],
+        });
+      }
     },
   });
 
@@ -154,6 +187,16 @@ export function useTasks(userId: string) {
       );
 
       return { previousTasks }; // store to rollback on error
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", userId] });
+      if (categoryId && range) {
+        const apiRange = mapRange(range);
+        queryClient.invalidateQueries({
+          queryKey: ["categoryMetrics", categoryId, apiRange],
+        });
+      }
     },
 
     // ✅ If mutation fails, rollback to previous
