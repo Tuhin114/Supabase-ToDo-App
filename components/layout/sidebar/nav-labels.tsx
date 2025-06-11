@@ -19,10 +19,9 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { useState } from "react";
 
-export function NavLabels({
-  items,
-}: {
+interface NavLevelsProps {
   items: {
     title: string;
     url: string;
@@ -33,7 +32,9 @@ export function NavLabels({
       url: string;
     }[];
   }[];
-}) {
+}
+
+export function NavLabels({ items }: NavLevelsProps) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>View</SidebarGroupLabel>

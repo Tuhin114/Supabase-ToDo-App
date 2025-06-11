@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, useMemo } from "react";
-import { useSelectedLayoutSegments } from "next/navigation";
+import { useSearchParams, useSelectedLayoutSegments } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -13,7 +13,14 @@ import { useCategories } from "@/hooks/categories/useCategories";
 
 export default function UserLayout({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
+  console.log(segments);
   const categoryId = segments?.[2];
+
+  const searchParams = useSearchParams();
+  console.log(searchParams);
+
+  const priority = searchParams.get("priority");
+  const status = searchParams.get("status");
 
   const { fetchCategories } = useCategories();
   const { data: categories, isLoading: categoriesLoading } = fetchCategories;
@@ -42,6 +49,18 @@ export default function UserLayout({ children }: { children: ReactNode }) {
       return { categoryName: name, title: name };
     }
 
+    if (priority) {
+      const priorityName = priority.charAt(0).toUpperCase() + priority.slice(1);
+      return { categoryName: null, title: `${priorityName}` };
+    }
+    if (status) {
+      const hypenFilteredStatusName = status.replace("-", " ");
+      const statusName =
+        hypenFilteredStatusName.charAt(0).toUpperCase() +
+        hypenFilteredStatusName.slice(1);
+      return { categoryName: null, title: `${statusName}` };
+    }
+
     // For other sections
     const formattedTitle = section.charAt(0).toUpperCase() + section.slice(1);
     return { categoryName: null, title: formattedTitle };
@@ -50,7 +69,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden">
       <SidebarProvider className="flex">
-        <MemoizedSidebar />
+        <MemoizedSidebar props={{}} />
         <SidebarInset>
           <header className="flex h-24 w-full px-4 py-10 justify-between items-center gap-2">
             <div className="flex items-center gap-2 px-4">

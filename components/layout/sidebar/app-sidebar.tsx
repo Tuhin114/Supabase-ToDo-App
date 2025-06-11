@@ -34,7 +34,11 @@ import { getUserDetails } from "@/hooks/user/getUserDetails";
 import { useCategories } from "@/hooks/categories/useCategories";
 import { Category } from "@/types/Task";
 
-function AppSidebarComponent(props: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarComponentProps {
+  props: React.ComponentPropsWithoutRef<typeof Sidebar>;
+}
+
+function AppSidebarComponent({ props }: AppSidebarComponentProps) {
   const { getId } = getUserDetails();
   const userId = getId.data;
 
@@ -63,9 +67,18 @@ function AppSidebarComponent(props: React.ComponentProps<typeof Sidebar>) {
         icon: SquareTerminal,
         isActive: true,
         items: [
-          { title: "High", url: "#" },
-          { title: "Moderate", url: "#" },
-          { title: "Low", url: "#" },
+          {
+            title: "High",
+            url: `/user/${userId}/priority?priority=high`,
+          },
+          {
+            title: "Moderate",
+            url: `/user/${userId}/priority?priority=moderate`,
+          },
+          {
+            title: "Low",
+            url: `/user/${userId}/priority?priority=low`,
+          },
         ],
       },
       {
@@ -73,13 +86,19 @@ function AppSidebarComponent(props: React.ComponentProps<typeof Sidebar>) {
         url: "#",
         icon: Bot,
         items: [
-          { title: "Done", url: "#" },
-          { title: "In Progress", url: "#" },
-          { title: "In Review", url: "#" },
-          { title: "On Hold", url: "#" },
-          { title: "To Do", url: "#" },
-          { title: "Waiting", url: "#" },
-          { title: "Stuck", url: "#" },
+          { title: "Done", url: `/user/${userId}/status?status=done` },
+          {
+            title: "In Progress",
+            url: `/user/${userId}/status?status=in-progress`,
+          },
+          {
+            title: "In Review",
+            url: `/user/${userId}/status?status=in-review`,
+          },
+          { title: "On Hold", url: `/user/${userId}/status?status=on-hold` },
+          { title: "To Do", url: `/user/${userId}/status?status=to-do` },
+          { title: "Waiting", url: `/user/${userId}/status?status=waiting` },
+          { title: "Stuck", url: `/user/${userId}/status?status=stuck` },
         ],
       },
       {

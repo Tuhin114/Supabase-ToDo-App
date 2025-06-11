@@ -96,8 +96,8 @@ export const TaskTable = ({
           <TableRow>
             <TableHead className="w-12"></TableHead>
             <TableHead>Task</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Priority</TableHead>
+            {source !== "status" && <TableHead>Status</TableHead>}
+            {source !== "priority" && <TableHead>Priority</TableHead>}
             {source === "categories" ? (
               <TableHead>Due Date</TableHead>
             ) : (
@@ -105,10 +105,14 @@ export const TaskTable = ({
             )}
 
             <TableHead>Time Estimate</TableHead>
-            {source === "today" && <TableHead>Time Left</TableHead>}
+            {(source === "today" ||
+              source === "priority" ||
+              source === "status") && <TableHead>Time Left</TableHead>}
             {source === "upcoming" && <TableHead>Time Span</TableHead>}
             <TableHead>Subtasks</TableHead>
-            {source === "categories" && <TableHead>Tags</TableHead>}
+            {(source === "categories" ||
+              source === "priority" ||
+              source === "status") && <TableHead>Tags</TableHead>}
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -136,12 +140,16 @@ export const TaskTable = ({
                     {task.title}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <StatusBadge status={task.status} />
-                </TableCell>
-                <TableCell>
-                  <PriorityBadge priority={task.priority} />
-                </TableCell>
+                {source !== "status" && (
+                  <TableCell>
+                    <StatusBadge status={task.status} />
+                  </TableCell>
+                )}
+                {source !== "priority" && (
+                  <TableCell>
+                    <PriorityBadge priority={task.priority} />
+                  </TableCell>
+                )}
                 {source === "categories" && (
                   <TableCell>
                     <span
@@ -170,7 +178,9 @@ export const TaskTable = ({
                     </span>
                   </TableCell>
                 )}
-                {source === "today" && (
+                {(source === "today" ||
+                  source === "priority" ||
+                  source === "status") && (
                   <TableCell>
                     <span className="text-sm">{getTaskTimeLeft(task)}</span>
                   </TableCell>
@@ -179,7 +189,9 @@ export const TaskTable = ({
                 <TableCell>
                   <SubTask subtask={task.subtasks} />
                 </TableCell>
-                {source === "categories" && (
+                {(source === "categories" ||
+                  source === "priority" ||
+                  source === "status") && (
                   <TableCell>
                     <TagBadges tags={task.tags} />
                   </TableCell>

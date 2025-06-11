@@ -612,6 +612,7 @@ const SidebarMenuAction = React.forwardRef<
 
   return (
     <Comp
+      suppressHydrationWarning={true}
       ref={ref}
       data-sidebar="menu-action"
       className={cn(

@@ -10,7 +10,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { Task, Category, TaskTime } from "@/types/Task";
+import type {
+  Task,
+  Category,
+  TaskTime,
+  TaskPriority,
+  TaskStatus,
+} from "@/types/Task";
 
 import TaskCategory from "../layout/task-sheet/TaskCategory";
 import { TaskStatusPrioritySelects } from "../layout/task-sheet/TaskStsPrio";
@@ -41,6 +47,8 @@ interface TaskSheetProps {
   startTime: Date;
   isOpen: boolean;
   category?: Category | null;
+  priority?: TaskPriority | null;
+  status?: TaskStatus | null;
   createNewTask: (formData: FormData) => void;
   updateExistingTask: (formData: FormData) => void;
   deleteTask: (taskId: string) => void;
@@ -53,6 +61,8 @@ export default function TaskSheet({
   isOpen,
   setOpen,
   category,
+  priority,
+  status,
   createNewTask,
   updateExistingTask,
   deleteTask,
@@ -90,8 +100,8 @@ export default function TaskSheet({
     return {
       title: task?.title || "",
       description: task?.description || "",
-      status: task?.status || "todo",
-      priority: task?.priority || "moderate",
+      status: task?.status || status || "todo",
+      priority: task?.priority || priority || "low",
       time: task?.time || getDefaultTime(),
       category: task?.category || category,
       tags: task?.tags || [],
