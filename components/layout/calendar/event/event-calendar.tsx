@@ -44,6 +44,7 @@ import { Task } from "@/types/Task";
 import TaskSheet from "../../../task/TaskSheet";
 import { TaskUpdateInput } from "@/app/(user-pages)/user/[id]/(tasks)/calendar/page";
 import { CalendarView } from "@/types/Calender";
+import { useToast } from "@/hooks/use-toast";
 
 export interface EventCalendarProps {
   events?: Task[];
@@ -62,6 +63,7 @@ export default function EventCalendar({
   className,
   initialView = "month",
 }: EventCalendarProps) {
+  const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>(initialView);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
@@ -143,7 +145,10 @@ export default function EventCalendar({
   };
 
   const handleEventCreateAtTime = (startTime: Date) => {
-    console.log("Creating new event at:", startTime); // Debug log
+    toast({
+      title: "Task Creating...",
+      description: `Creating new task at ${format(startTime, "p")}.`,
+    });
 
     setSelectedEvent(null);
     setStartTime(startTime);
@@ -151,6 +156,47 @@ export default function EventCalendar({
   };
 
   const handleEventUpdate = (updatedEvent: TaskUpdateInput) => {
+    if (
+      typeof updatedEvent === "object" &&
+      updatedEvent !== null &&
+      !(updatedEvent instanceof FormData) &&
+      "taskId" in updatedEvent &&
+      "time" in updatedEvent
+    ) {
+      // Generate view-specific toast description
+      let description = "";
+
+      switch (view) {
+        case "month":
+          // Format: "Task updated to 12 Jun - 14 Jun"
+          description = `Task shifted to ${format(updatedEvent.time.start, "d MMM")}`;
+          break;
+
+        case "week":
+          // Format: "Task updated to Thu 12:00 - Fri 14:00"
+          description = `Task updated to ${format(updatedEvent.time.start, "EEE HH:mm")} - ${format(updatedEvent.time.end, "EEE HH:mm")}`;
+          break;
+
+        case "day":
+          // Format: "Task updated to 12:00 - 14:00" (only time)
+          description = `Task shifted to ${format(updatedEvent.time.start, "HH:mm")} - ${format(updatedEvent.time.end, "HH:mm")}`;
+          break;
+
+        case "agenda":
+          // Format: "Task updated to 12 Jun 12:00 - 14 Jun 14:00"
+          description = `Task updated to ${format(updatedEvent.time.start, "d MMM HH:mm")} - ${format(updatedEvent.time.end, "d MMM HH:mm")}`;
+          break;
+
+        default:
+          // Fallback to original format
+          description = `Task time updated to ${format(updatedEvent.time.start, "PPp")} - ${format(updatedEvent.time.end, "PPp")}.`;
+      }
+
+      toast({
+        title: "Task Time Updated",
+        description: description,
+      });
+    }
     onEventUpdate(updatedEvent);
   };
 
@@ -289,12 +335,7 @@ export default function EventCalendar({
                 setIsEventDialogOpen(true);
               }}
             >
-              <PlusIcon
-                className="opacity-60 sm:-ms-1 mr-1"
-                size={16}
-                aria-hidden="true"
-              />
-              <span className="max-sm:sr-only">New Task</span>
+              <span className="max-sm:sr-only">Add Task</span>
             </Button>
           </div>
         </div>
@@ -334,13 +375,10 @@ export default function EventCalendar({
         </div>
 
         <TaskSheet
-          categories={[{ id: "1", name: "Category 1" }]}
           task={selectedEvent}
           startTime={startTime}
           isOpen={isEventDialogOpen}
           setOpen={setIsEventDialogOpen}
-          // onSave={handleSaveTask}
-          // onDelete={onEventDelete}
           createNewTask={onEventAdd}
           updateExistingTask={onEventUpdate}
           deleteTask={onEventDelete}

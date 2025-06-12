@@ -22,6 +22,8 @@ import TaskCategory from "../layout/task-sheet/TaskCategory";
 import { TaskStatusPrioritySelects } from "../layout/task-sheet/TaskStsPrio";
 import { TaskColorPicker } from "../layout/task-sheet/TaskColor";
 import { TitleDescriptionFields } from "../layout/task-sheet/TaskTitleDesc";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "../ui/toast";
 // import { createNewTask, updateTask } from "@/actions/task/action";
 
 const TaskTimePicker = lazy(() =>
@@ -70,6 +72,8 @@ export default function TaskSheet({
   const [isPending, startTransition] = useTransition();
   const isEditing = Boolean(task?.id);
 
+  const { toast } = useToast();
+
   // Memoized default values
   const defaultValues = useMemo(() => {
     const getDefaultTime = (): TaskTime => {
@@ -112,19 +116,30 @@ export default function TaskSheet({
 
   const handleSubmit = useCallback(
     async (formData: FormData) => {
-      console.log("Form Data:", formData);
       startTransition(() => {
         try {
           if (task?.id) {
             formData.append("taskId", task.id);
             updateExistingTask(formData);
+            toast({
+              title: "Task Updated",
+              description: `"${formData.get("title")}" has been successfully updated.`,
+            });
           } else {
             createNewTask(formData);
+            toast({
+              title: "Task Created",
+              description: `"${formData.get("title")}" has been successfully created.`,
+            });
           }
           setOpen(false);
         } catch (error) {
           console.error("Error submitting task:", error);
-          // Add toast or alert here if needed
+          toast({
+            title: "Something went wrong",
+            description: "Failed to save the task. Please try again.",
+            action: <ToastAction altText="Try again">Try again</ToastAction>,
+          });
         }
       });
     },
@@ -137,13 +152,21 @@ export default function TaskSheet({
     startTransition(() => {
       try {
         deleteTask(task.id);
+        toast({
+          title: "Task Deleted",
+          description: `"${task.title}" has been removed successfully.`,
+        });
         setOpen(false);
       } catch (error) {
         console.error("Failed to delete task:", error);
-        // Handle error - you can add toast notification here
+        toast({
+          title: "Failed to delete task",
+          description: "Something went wrong while deleting the task.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
       }
     });
-  }, [task?.id, setOpen]);
+  }, [task?.id, task?.title, setOpen]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -200,7 +223,9 @@ export default function TaskSheet({
               </SheetClose>
 
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save"}
+                {isPending
+                  ? `${isEditing ? "Saving" : "Creating"}...`
+                  : `${isEditing ? "Save" : "Create"}`}
               </Button>
             </div>
           </SheetFooter>

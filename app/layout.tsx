@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { ReactQueryClientProvider } from "@/utils/react-query/ReactQueryClientProvider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({ subsets: ["latin"], display: "swap" });
 
@@ -27,6 +28,7 @@ export default function RootLayout({
             {children}
             <ReactQueryDevtools initialIsOpen={true} />
           </ThemeProvider>
+          <Toaster />
         </body>
       </html>
     </ReactQueryClientProvider>

@@ -65,7 +65,7 @@ function AppSidebarComponent({ props }: AppSidebarComponentProps) {
         title: "Priority",
         url: "#",
         icon: SquareTerminal,
-        isActive: true,
+        isActive: false,
         items: [
           {
             title: "High",

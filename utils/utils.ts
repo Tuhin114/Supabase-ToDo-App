@@ -76,8 +76,6 @@ export function parseFormData(formData: FormData) {
       timeEstimate: getString("timeEstimate"),
       allDay: getBoolean("allDay"),
     } as TaskTime,
-    createdAt: new Date(getString("createdAt")),
-    updatedAt: new Date(getString("updatedAt")),
   };
 }
 
